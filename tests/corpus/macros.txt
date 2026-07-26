@@ -1,0 +1,46 @@
+========================================
+Attribute macro and macro without modifiers
+========================================
+
+package sample
+
+public macro Foo(attrTokens: Tokens, inputTokens: Tokens): Tokens {
+    return inputTokens
+}
+
+macro Simple(input: Tokens): Tokens {
+    return input
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (macroDefinition (modifiers) name: (macroName) (identifier) (identifier) (identifier) (identifier) (identifier) (block (jumpExpression (atomicVariable (varBindingPattern))))) (macroDefinition name: (macroName) (identifier) (identifier) (identifier) (block (jumpExpression (atomicVariable (varBindingPattern))))))
+
+========================================
+Quote expression with declarations
+========================================
+
+package sample
+
+main() {
+    let tokens = quote(let x = 1)
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (quoteExpression (quoteTokenTree))))))
+
+========================================
+Quote token trees with syntactic-position splices
+========================================
+
+main() {
+    let functionType = quote(($(paramType)) -> $(returnType))
+    let lambda = quote({$(identifier):$(paramType) => $(body)})
+    let declaration = quote(private var $(name): ?Repeater = None
+    )
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (quoteExpression (quoteTokenTree (quoteTokenTree (quoteSplice (quoteTokenTree))) (quoteSplice (quoteTokenTree))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (quoteExpression (quoteTokenTree (quoteTokenTree (quoteSplice (quoteTokenTree)) (quoteSplice (quoteTokenTree)) (quoteSplice (quoteTokenTree)))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (quoteExpression (quoteTokenTree (quoteSplice (quoteTokenTree))))))))

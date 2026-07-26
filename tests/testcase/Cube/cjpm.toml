@@ -1,0 +1,13 @@
+[dependencies]
+
+[package]
+  cjc-version = "1.0.5"
+  compile-option = ""
+  description = "nothing here"
+  link-option = ""
+  name = "cube"
+  output-type = "executable"
+  src-dir = ""
+  target-dir = ""
+  version = "1.0.5"
+  package-configuration = {}

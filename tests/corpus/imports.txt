@@ -1,0 +1,84 @@
+========================================
+Simple and wildcard imports
+========================================
+
+package demo
+import std.io
+import std.io.*
+import package1.foo
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList packageName: (scoped_identifier scope: (identifier) name: (identifier))) (importList (packageFull packageName: (scoped_identifier scope: (identifier) name: (identifier)) (asterisk))) (importList packageName: (scoped_identifier scope: (identifier) name: (identifier))))
+
+========================================
+Package and item aliases
+========================================
+
+package demo
+import p1 as A
+import p1 as B
+import p2.f3 as f
+import std.collection.ArrayList as List
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList (packageAlias packageName: (identifier) alias: (identifier))) (importList (packageAlias packageName: (identifier) alias: (identifier))) (importList (packageAlias packageName: (scoped_identifier scope: (identifier) name: (identifier)) alias: (identifier))) (importList (packageAlias packageName: (scoped_identifier scope: (scoped_identifier scope: (identifier) name: (identifier)) name: (identifier)) alias: (identifier))))
+
+========================================
+Group imports from different packages
+========================================
+
+package demo
+import {package1.foo, package2.bar}
+import {package1.*, package2.*}
+import {p1.C as C1, p2.C as C2}
+import {p1 as A, p2 as B}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList (packageGroup packageName: (scoped_identifier scope: (identifier) name: (identifier)) packageName: (scoped_identifier scope: (identifier) name: (identifier)))) (importList (packageGroup (packageFull packageName: (identifier) (asterisk)) (packageFull packageName: (identifier) (asterisk)))) (importList (packageGroup (packageAlias packageName: (scoped_identifier scope: (identifier) name: (identifier)) alias: (identifier)) (packageAlias packageName: (scoped_identifier scope: (identifier) name: (identifier)) alias: (identifier)))) (importList (packageGroup (packageAlias packageName: (identifier) alias: (identifier)) (packageAlias packageName: (identifier) alias: (identifier)))))
+
+========================================
+Subgroup imports
+========================================
+
+package demo
+import package1.{foo, bar, fuzz}
+import std.math.{abs, max as maxInt}
+import a.{b.*, c.*}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList (subGroupOfPackage packageName: (identifier) (packageGroup packageName: (identifier) packageName: (identifier) packageName: (identifier)))) (importList (subGroupOfPackage packageName: (scoped_identifier scope: (identifier) name: (identifier)) (packageGroup packageName: (identifier) (packageAlias packageName: (identifier) alias: (identifier))))) (importList (subGroupOfPackage packageName: (identifier) (packageGroup (packageFull packageName: (identifier) (asterisk)) (packageFull packageName: (identifier) (asterisk))))))
+
+========================================
+Visibility modifiers on imports
+========================================
+
+package demo
+public import a.b.f
+private import std.io.*
+internal import a.b.{c, d}
+protected import a.b.f
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList (modifiers) packageName: (scoped_identifier scope: (scoped_identifier scope: (identifier) name: (identifier)) name: (identifier))) (importList (modifiers) (packageFull packageName: (scoped_identifier scope: (identifier) name: (identifier)) (asterisk))) (importList (modifiers) (subGroupOfPackage packageName: (scoped_identifier scope: (identifier) name: (identifier)) (packageGroup packageName: (identifier) packageName: (identifier)))) (importList (modifiers) packageName: (scoped_identifier scope: (scoped_identifier scope: (identifier) name: (identifier)) name: (identifier))))
+
+========================================
+Imports in full program
+========================================
+
+package pkgb
+import p1.C as C1
+import p2.C as C2
+
+main() {
+    let _ = C1()
+    let _ = C2()
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList (packageAlias packageName: (scoped_identifier scope: (identifier) name: (identifier)) alias: (identifier))) (importList (packageAlias packageName: (scoped_identifier scope: (identifier) name: (identifier)) alias: (identifier))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (wildcardPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (variableDeclaration name: (variableName (wildcardPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))))))

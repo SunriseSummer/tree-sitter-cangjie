@@ -1,0 +1,3 @@
+#ifndef TREE_SITTER_WASM_STDIO_H_
+#define TREE_SITTER_WASM_STDIO_H_
+#endif

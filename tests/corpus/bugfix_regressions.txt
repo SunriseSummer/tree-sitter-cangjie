@@ -1,0 +1,256 @@
+========================================
+Unicode (CJK) identifiers in declarations and expressions
+========================================
+
+package edge
+
+public class 订单 {
+    public 订单(let 编号: Int64, let 金额: Float64) {}
+
+    public func 折后价(折扣: Float64): Float64 {
+        return 金额 * 折扣
+    }
+}
+
+public func 计算总额(orders: Array<订单>): Float64 {
+    var 总额 = 0.0
+    for (o in orders) {
+        总额 += o.折后价(0.9)
+    }
+    return 总额
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (classDefinition (modifiers) name: (className) (classBody (primaryInit (modifiers) (className) (primaryInitParamList (unnamedMemberParam (parameter paraName: (identifier) type: (Int64))) (unnamedMemberParam (parameter paraName: (identifier) type: (Float64))))) (functionDefinition (modifiers) name: (funcName) (parameterList (parameter paraName: (identifier) type: (Float64))) (returnType (Float64)) (block (jumpExpression (binaryExpression left: (atomicVariable (varBindingPattern)) right: (atomicVariable (varBindingPattern)))))))) (functionDefinition (modifiers) name: (funcName) (parameterList (parameter paraName: (identifier) type: (arrayType (typeArguments (userType (identifier)))))) (returnType (Float64)) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (floatLiteral)) (forInExpression (varBindingPattern) (atomicVariable (varBindingPattern)) (block (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix (floatLiteral)))))) (jumpExpression (atomicVariable (varBindingPattern))))))
+
+========================================
+Unicode identifiers with underscore prefix and raw backticks
+========================================
+
+main() {
+    let __こんにちは = 1
+    let `类型` = 2
+    println(__こんにちは + `类型`)
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (binaryExpression left: (atomicVariable (varBindingPattern)) right: (atomicVariable (varBindingPattern))))))))
+
+========================================
+Method chain with leading dots on continuation lines
+========================================
+
+class Painter {
+    public func fill(v: Int64): Painter { return this }
+    public func stroke(v: Int64): Painter { return this }
+}
+
+main() {
+    let p = Painter()
+    p
+        .fill(1)
+        .stroke(2)
+    println("chain ok")
+}
+
+---
+
+(translationUnit (classDefinition name: (className) (classBody (functionDefinition (modifiers) name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (userType (identifier))) (block (jumpExpression (thisSuperExpression)))) (functionDefinition (modifiers) name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (userType (identifier))) (block (jumpExpression (thisSuperExpression)))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (postfixExpression operand: (postfixExpression operand: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix (integerLiteral))) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix (integerLiteral))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))))
+
+========================================
+Leading-dot chain with interleaved comments and blank lines
+========================================
+
+main() {
+    let s = "abc"
+    let n = s
+        // take the size first
+        .size
+
+    let t = s
+
+        .toString()
+    println(t + "${n}")
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) (lineComment) suffix: (fieldAccess (atomicVariable (varBindingPattern))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (binaryExpression left: (atomicVariable (varBindingPattern)) right: (stringLiteral (inlineExpression (atomicVariable (varBindingPattern))))))))))
+
+========================================
+Newline before range operator still terminates the statement
+========================================
+
+main() {
+    let a = 5
+    let r = 0..a
+    var s = 0
+    for (i in r) {
+        s += i
+    }
+    println(s)
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (rangeExpression start: (integerLiteral) end: (atomicVariable (varBindingPattern)))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (forInExpression (varBindingPattern) (atomicVariable (varBindingPattern)) (block (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (atomicVariable (varBindingPattern))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+========================================
+Interface property declarations without accessor body
+========================================
+
+interface Measurable {
+    prop size: Int64
+    mut prop label: String
+}
+
+class Box <: Measurable {
+    private var l = "b"
+    public prop size: Int64 {
+        get() { 42 }
+    }
+    public mut prop label: String {
+        get() { l }
+        set(v) { l = v }
+    }
+}
+
+main() {
+    let b = Box()
+    println(b.size)
+}
+
+---
+
+(translationUnit (interfaceDefinition name: (interfaceName) (interfaceBody (interfaceBody (propertyDefinition name: (propertyName) type: (Int64))) (propertyDefinition (modifiers) name: (propertyName) type: (String)))) (classDefinition name: (className) (superOrInterface (identifier)) (classBody (variableDeclaration (modifiers) name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (propertyDefinition (modifiers) name: (propertyName) type: (Int64) getter: (block (integerLiteral))) (propertyDefinition (modifiers) name: (propertyName) type: (String) getter: (block (atomicVariable (varBindingPattern))) setter: (identifier) setter: (block (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (atomicVariable (varBindingPattern))))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))))))
+
+========================================
+Nested block comments
+========================================
+
+main() {
+    /* outer /* inner */ still comment */
+    /* level1 /* level2 /* level3 */ back2 */ back1 */
+    let x = 1 /* inline /* nested */ ok */ + 2
+    println(x)
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (blockComment) (blockComment) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (binaryExpression left: (integerLiteral) (blockComment) right: (integerLiteral))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+========================================
+Annotation macro on the same line as a declaration
+========================================
+
+@Deprecated func old(): Unit { println("old") }
+
+@Deprecated
+func older(): Unit { println("older") }
+
+main() {
+    old()
+    older()
+}
+
+---
+
+(translationUnit (macroExpression (macroName)) (functionDefinition name: (funcName) (parameterList) (returnType (Unit)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))) (macroExpression (macroName)) (functionDefinition name: (funcName) (parameterList) (returnType (Unit)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))))
+
+========================================
+Macro attribute arguments: named, in-strategy and expressions
+========================================
+
+import std.unittest.*
+import std.unittest.testmacro.*
+
+@Test
+@Configure[randomSeed: 42]
+class BenchCls {
+    @Bench[data in [1, 2]]
+    func h(data: Int64) {
+        let _ = data
+    }
+
+    @Bench[x in 10..20]
+    @Configure[baseline: "h"]
+    func f(x: Int64) {
+        let _ = x
+    }
+}
+
+---
+
+(translationUnit (importList (packageFull packageName: (scoped_identifier scope: (identifier) name: (identifier)) (asterisk))) (importList (packageFull packageName: (scoped_identifier scope: (scoped_identifier scope: (identifier) name: (identifier)) name: (identifier)) (asterisk))) (macroExpression (macroName)) (macroExpression (macroName) (varBindingPattern) (integerLiteral)) (classDefinition name: (className) (classBody (macroExpression (macroName) (atomicVariable (varBindingPattern)) (arrayLiteral (integerLiteral) (integerLiteral))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (block (variableDeclaration name: (variableName (wildcardPattern)) initilizer: (atomicVariable (varBindingPattern))))) (macroExpression (macroName) (atomicVariable (varBindingPattern)) (rangeExpression start: (integerLiteral) end: (integerLiteral))) (macroExpression (macroName) (varBindingPattern) (stringLiteral)) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (block (variableDeclaration name: (variableName (wildcardPattern)) initilizer: (atomicVariable (varBindingPattern))))))))
+
+========================================
+Let-pattern condition chains in if and while
+========================================
+
+func f(): ?Int64 { return Some(1) }
+func g(): ?Int64 { return Some(2) }
+
+main() {
+    if (let Some(a) <- f() && let Some(b) <- g()) {
+        println(a + b)
+    }
+    let ok = true
+    if (ok && let Some(a) <- f()) {
+        println(a)
+    }
+    while (let Some(b) <- g() && b > 0) {
+        println(b)
+        break
+    }
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList) (returnType (prefixType (Int64))) (block (jumpExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))))) (functionDefinition name: (funcName) (parameterList) (returnType (prefixType (Int64))) (block (jumpExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))))) (mainDefinition (parameterList) (block (ifExpression condition: (enumPattern (varBindingPattern) (tuplePattern (varBindingPattern))) condition: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)) condition: (enumPattern (varBindingPattern) (tuplePattern (varBindingPattern))) condition: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)) consequence: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (binaryExpression left: (atomicVariable (varBindingPattern)) right: (atomicVariable (varBindingPattern))))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (booleanLiteral)) (ifExpression condition: (atomicVariable (varBindingPattern)) condition: (enumPattern (varBindingPattern) (tuplePattern (varBindingPattern))) condition: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)) consequence: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))) (whileExpression (enumPattern (varBindingPattern) (tuplePattern (varBindingPattern))) (binaryExpression left: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)) right: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral))) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))) (jumpExpression))))))
+
+========================================
+Right-associative power and coalescing operators
+========================================
+
+main() {
+    let x = 2 ** 3
+    let a: ?Int64 = None
+    let b: ?Int64 = Some(7)
+    let c: Int64 = a ?? b ?? 0
+    println(x + c)
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (binaryExpression left: (integerLiteral) right: (integerLiteral))) (variableDeclaration name: (variableName (varBindingPattern)) type: (prefixType (Int64)) initilizer: (atomicVariable (varBindingPattern))) (variableDeclaration name: (variableName (varBindingPattern)) type: (prefixType (Int64)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))) (variableDeclaration name: (variableName (varBindingPattern)) type: (Int64) initilizer: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (binaryExpression left: (atomicVariable (varBindingPattern)) right: (atomicVariable (varBindingPattern))))))))
+
+========================================
+Negative numeric literals in match constant patterns
+========================================
+
+func classify(code: Int64): String {
+    return match (code) {
+        case -1 => "error"
+        case -2 | -3 => "fatal"
+        case 0 => "idle"
+        case _ => "busy"
+    }
+}
+
+func classifyF(x: Float64): String {
+    return match (x) {
+        case -2.5 => "low"
+        case _ => "other"
+    }
+}
+
+main() {
+    println(classify(-1))
+    println(classifyF(-2.5))
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (String)) (block (jumpExpression (matchExpression (atomicVariable (varBindingPattern)) (matchCase (constantPattern (integerLiteral)) (stringLiteral)) (matchCase (constantPattern (integerLiteral)) (constantPattern (integerLiteral)) (stringLiteral)) (matchCase (constantPattern (integerLiteral)) (stringLiteral)) (matchCase (wildcardPattern) (stringLiteral)))))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Float64))) (returnType (String)) (block (jumpExpression (matchExpression (atomicVariable (varBindingPattern)) (matchCase (constantPattern (floatLiteral)) (stringLiteral)) (matchCase (wildcardPattern) (stringLiteral)))))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (unaryExpression argument: (integerLiteral)))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (unaryExpression argument: (floatLiteral)))))))))

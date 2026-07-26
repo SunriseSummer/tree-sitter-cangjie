@@ -1,0 +1,95 @@
+========================================
+Package declaration without trailing newline
+========================================
+
+package test
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)))
+
+========================================
+Import without trailing newline
+========================================
+
+import std.io
+
+---
+
+(translationUnit (importList packageName: (scoped_identifier scope: (identifier) name: (identifier))))
+
+========================================
+Macro package without trailing newline
+========================================
+
+macro package mymacros
+
+---
+
+(translationUnit (macroPackageDeclaration packageName: (identifier)))
+
+========================================
+Package and import without trailing newline
+========================================
+
+package test
+import std.io
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList packageName: (scoped_identifier scope: (identifier) name: (identifier))))
+
+========================================
+Package import and class without trailing newline
+========================================
+
+package test
+import std.io
+class Foo {}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList packageName: (scoped_identifier scope: (identifier) name: (identifier))) (classDefinition name: (className) (classBody)))
+
+========================================
+Class without trailing newline
+========================================
+
+class Foo {}
+
+---
+
+(translationUnit (classDefinition name: (className) (classBody)))
+
+========================================
+Main function without trailing newline
+========================================
+
+main() {
+    return 0
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (jumpExpression (integerLiteral)))))
+
+========================================
+Variable declaration without trailing newline
+========================================
+
+let x = 42
+
+---
+
+(translationUnit (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)))
+
+========================================
+Multiple imports without trailing newline
+========================================
+
+import std.io
+import std.collection
+
+---
+
+(translationUnit (importList packageName: (scoped_identifier scope: (identifier) name: (identifier))) (importList packageName: (scoped_identifier scope: (identifier) name: (identifier))))

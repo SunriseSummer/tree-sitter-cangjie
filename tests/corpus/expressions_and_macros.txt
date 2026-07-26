@@ -1,0 +1,114 @@
+========================================
+Expressions literals and optional access
+========================================
+
+package sample
+
+class Node {
+    prop value: Int64 {
+        get() { 1 }
+    }
+}
+
+main() {
+    let integer = 0xFFu8
+    let float = 3.14f64
+    let rune = r'A'
+    let single = 'hello'
+    let line = "value = ${integer}"
+    let block = """
+multi
+line
+"""
+    let raw = #"
+not ${interpolated}
+"#
+    let tuple = (integer, float)
+    let array = [integer, *[2, 3]]
+    let range = 0..=10 : 2
+    let casted = Int64(float)
+    let truth = true && false
+    let flag = integer is Int64
+    let maybe: ?Node = None
+    maybe?.value
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (classDefinition name: (className) (classBody (propertyDefinition name: (propertyName) type: (Int64) getter: (block (integerLiteral))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (floatLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (runeLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral (inlineExpression (atomicVariable (varBindingPattern))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (tupleExpression (atomicVariable (varBindingPattern)) (atomicVariable (varBindingPattern)))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (arrayLiteral (atomicVariable (varBindingPattern)) (arrayLiteral (integerLiteral) (integerLiteral)))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (rangeExpression start: (integerLiteral) end: (integerLiteral) step: (integerLiteral))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (binaryExpression left: (booleanLiteral) right: (booleanLiteral))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (atomicVariable (varBindingPattern)))) (variableDeclaration name: (variableName (varBindingPattern)) type: (prefixType (userType (identifier))) initilizer: (atomicVariable (varBindingPattern))) (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (questAccess)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))))
+
+========================================
+Macros annotations and quote expressions
+========================================
+
+package sample
+
+@C
+foreign func puts(value: CString): Int32
+
+public macro Trace(input: Tokens): Tokens {
+    quote(trace $(input))
+}
+
+class Box {
+    prop value: Int64 {
+        get() { 1 }
+    }
+}
+
+main() {
+    @Trace let current = Box()
+    let maybe: ?Box = None
+    maybe?.value
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (macroExpression (macroName)) (foreignDeclaration (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (userType (identifier)))) (returnType (Int32)))) (macroDefinition (modifiers) name: (macroName) (identifier) (identifier) (identifier) (block (quoteExpression (quoteTokenTree (quoteSplice (quoteTokenTree)))))) (classDefinition name: (className) (classBody (propertyDefinition name: (propertyName) type: (Int64) getter: (block (integerLiteral))))) (mainDefinition (parameterList) (block (macroExpression (macroName)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (variableDeclaration name: (variableName (varBindingPattern)) type: (prefixType (userType (identifier))) initilizer: (atomicVariable (varBindingPattern))) (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (questAccess)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))))
+
+========================================
+Array slicing and chained postfix access
+========================================
+
+package sample
+
+class Inner {
+    prop value: Int64 { get() { 1 } }
+}
+
+class Box {
+    func next(): Box { return this }
+    func get(index: Int64): Inner { return Inner() }
+}
+
+main() {
+    let values = [1, 2, 3, 4]
+    let tail = values[1..]
+    let head = values[..2]
+    let middle = values[1..=2]
+    let stride = values[0..3:2]
+
+    let box: ?Box = Box()
+    box?.next().get(0).value
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (classDefinition name: (className) (classBody (propertyDefinition name: (propertyName) type: (Int64) getter: (block (integerLiteral))))) (classDefinition name: (className) (classBody (functionDefinition name: (funcName) (parameterList) (returnType (userType (identifier))) (block (jumpExpression (thisSuperExpression)))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (userType (identifier))) (block (jumpExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (arrayLiteral (integerLiteral) (integerLiteral) (integerLiteral) (integerLiteral))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral)))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral)))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (rangeExpression start: (integerLiteral) end: (integerLiteral))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (rangeExpression start: (integerLiteral) end: (integerLiteral) step: (integerLiteral))))) (variableDeclaration name: (variableName (varBindingPattern)) type: (prefixType (userType (identifier))) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (postfixExpression operand: (postfixExpression operand: (postfixExpression operand: (postfixExpression operand: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (questAccess)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix)) suffix: (fieldAccess (atomicVariable (varBindingPattern (identifier))))) suffix: (callSuffix (integerLiteral))) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))))
+
+========================================
+Numeric literal variants
+========================================
+
+package sample
+
+main() {
+    let binary = 0b1010i8
+    let octal = 0o77u16
+    let hexFloat = 0x1.fp3
+    let decimalFloat = .25f32
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (floatLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (floatLiteral)))))

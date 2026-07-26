@@ -1,0 +1,63 @@
+========================================
+Byte literals
+========================================
+
+package sample
+
+main() {
+    var a = b'x'
+    var b1 = b'\n'
+    var c = b'\u{78}'
+    c = b'\u{90}' - b'\u{66}' + c
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (byteLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (byteLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (byteLiteral)) (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (binaryExpression left: (binaryExpression left: (byteLiteral) right: (byteLiteral)) right: (atomicVariable (varBindingPattern)))))))
+
+========================================
+Triple single-quote and double-quote multiline strings
+========================================
+
+package sample
+
+main() {
+    let s1 = '''
+    Hello,
+    Cangjie'''
+    let s2 = """
+    World"""
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)))))
+
+========================================
+Raw strings with single and double quotes
+========================================
+
+package sample
+
+main() {
+    let s1 = ##'#'\n'##
+    let s2 = #'raw'#
+    let s3 = #"double"#
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (stringLiteral)))))
+
+========================================
+Boolean literals
+========================================
+
+main() {
+    let enabled = true
+    let disabled = false
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (booleanLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (booleanLiteral)))))

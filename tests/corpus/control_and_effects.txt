@@ -1,0 +1,172 @@
+========================================
+Control flow and pattern matching
+========================================
+
+package sample
+
+enum Option<T> {
+    | Some(T)
+    | None
+}
+
+main() {
+    let option = Option<Int64>.Some(1)
+    if (let value <- option) {
+        println(value)
+    } else {
+        println("empty")
+    }
+
+    match (option) {
+        case Option.Some(value) where value > 0 =>
+            println(value)
+        case Option.None =>
+            println("none")
+    }
+
+    for (item in 0..10 where item % 2 == 0) {
+        if (item == 4) { continue }
+        if (item == 8) { break }
+        println(item)
+    }
+
+    var count = 0
+    while (count < 3) {
+        count++
+    }
+
+    do {
+        count--
+    } while (count > 0)
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (enumDefinition name: (enumName) (typeParameters (identifier)) (enumBody (enumConstructor name: (identifier) payload: (enumPayload type: (userType (identifier)))) (enumConstructor name: (identifier)))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (Int64))) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix (integerLiteral)))) (ifExpression condition: (varBindingPattern) condition: (atomicVariable (varBindingPattern)) consequence: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) alternative: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))) (matchExpression (atomicVariable (varBindingPattern)) (matchCase (enumPattern (identifier) (varBindingPattern) (tuplePattern (varBindingPattern))) (patternGuard (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) (matchCase (enumPattern (identifier) (varBindingPattern)) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))) (forInExpression (varBindingPattern) (rangeExpression start: (integerLiteral) end: (integerLiteral)) (patternGuard (binaryExpression left: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)) right: (integerLiteral))) (block (ifExpression condition: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)) consequence: (block (jumpExpression))) (ifExpression condition: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)) consequence: (block (jumpExpression))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (whileExpression (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (incOrDec)))) (doWhileExpression body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (incOrDec))) (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral))))))
+
+========================================
+Error handling concurrency and unsafe blocks
+========================================
+
+package sample
+
+class MyError <: Exception {
+    public init(message: String) {
+        super(message)
+    }
+}
+
+func risky(value: Int64): Int64 {
+    if (value < 0) {
+        throw MyError("bad")
+    }
+    return value
+}
+
+main() {
+    try {
+        risky(-1)
+    } catch (e: MyError) {
+        println(e)
+    } finally {
+        println("done")
+    }
+
+    try (resource = createResource()) {
+        resource.use()
+    } catch (_: Exception) {
+        println("resource")
+    }
+
+    spawn {
+        println("worker")
+    }
+
+    let lock = 0
+    synchronized(lock) {
+        println(lock)
+    }
+
+    unsafe {
+        let ptr = CPointer<Int32>()
+    }
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (classDefinition name: (className) (superOrInterface (identifier)) (classBody (init (modifiers) (parameterList (parameter paraName: (identifier) type: (String))) (block (postfixExpression operand: (thisSuperExpression) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (Int64)) (block (ifExpression condition: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)) consequence: (block (jumpExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral)))))) (jumpExpression (atomicVariable (varBindingPattern))))) (mainDefinition (parameterList) (block (tryExpression try_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (unaryExpression argument: (integerLiteral))))) (catchPattern (varBindingPattern) (userType (identifier))) catch_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) finally_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))) (tryExpression (resourceSpecifications (resourceSpecification (identifier) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))) try_body: (block (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix))) (catchPattern (wildcardPattern) (userType (identifier))) catch_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))) (spawnExpression (trailingLambdaExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (synchronizedExpression (atomicVariable (varBindingPattern)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))) (unsafeExpression (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (Int32))) suffix: (callSuffix))))))))
+
+========================================
+Type patterns and alternative cases
+========================================
+
+package sample
+
+main() {
+    let input = 1
+    match (input) {
+        case value: Int64 => println(value)
+        case other | _ => println(other)
+    }
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (matchExpression (atomicVariable (varBindingPattern)) (matchCase (typePattern (varBindingPattern) (Int64)) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) (matchCase (varBindingPattern) (wildcardPattern) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))))
+
+========================================
+Tuple destructuring and enum alternatives
+========================================
+
+package sample
+
+enum State {
+    | Idle
+    | Busy
+    | Done
+}
+
+main() {
+    let pair = (1, 2)
+    match (pair) {
+        case (left, right) => println(left)
+    }
+
+    match (State.Idle) {
+        case State.Idle | State.Done => println(1)
+        case State.Busy => println(2)
+    }
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (enumDefinition name: (enumName) (enumBody (enumConstructor name: (identifier)) (enumConstructor name: (identifier)) (enumConstructor name: (identifier)))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (tupleExpression (integerLiteral) (integerLiteral))) (matchExpression (atomicVariable (varBindingPattern)) (matchCase (tuplePattern (varBindingPattern) (varBindingPattern)) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))) (matchExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) (matchCase (enumPattern (identifier) (varBindingPattern)) (enumPattern (identifier) (varBindingPattern)) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))) (matchCase (enumPattern (identifier) (varBindingPattern)) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral))))))))
+
+========================================
+Multiple catches and standalone if
+========================================
+
+package sample
+
+class A <: Exception { public init() { super() } }
+class B <: Exception { public init() { super() } }
+
+main() {
+    if (true) {
+        println(1)
+    }
+
+    try {
+        risky()
+    } catch (a: A) {
+        println(a)
+    } catch (_: B | Exception) {
+        println("b")
+    } finally {
+        println("done")
+    }
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (classDefinition name: (className) (superOrInterface (identifier)) (classBody (init (modifiers) (parameterList) (block (postfixExpression operand: (thisSuperExpression) suffix: (callSuffix)))))) (classDefinition name: (className) (superOrInterface (identifier)) (classBody (init (modifiers) (parameterList) (block (postfixExpression operand: (thisSuperExpression) suffix: (callSuffix)))))) (mainDefinition (parameterList) (block (ifExpression condition: (booleanLiteral) consequence: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral))))) (tryExpression try_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (catchPattern (varBindingPattern) (userType (identifier))) catch_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) (catchPattern (wildcardPattern) (userType (identifier)) (userType (identifier))) catch_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral)))) finally_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))))))

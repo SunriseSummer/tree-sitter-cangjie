@@ -1,0 +1,13 @@
+[package]
+  cjc-version = "1.0.5"
+  name = "test_imports_project"
+  description = "测试导入语句语法的 cjpm 项目"
+  version = "1.0.5"
+  output-type = "executable"
+  compile-option = ""
+  override-compile-option = ""
+  link-option = ""
+  package-configuration = {}
+  target-dir = ""
+
+[dependencies]

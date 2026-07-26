@@ -1,0 +1,40 @@
+.DS_Store
+.vscode
+.cache
+
+node_modules/
+build/
+release/
+prebuilds/
+
+# Build artifacts
+*.so
+*.o
+*.a
+*.dylib
+*.wasm
+*.rlib
+
+# Python build intermediates
+__pycache__
+dist/
+*.egg-info
+
+# C build intermediates
+bindings/c/*.pc
+
+# Rust build artifacts
+bindings/rust/target/
+Cargo.lock
+
+# Examples build artifacts
+examples/c/parse_cangjie
+examples/node/node_modules/
+examples/node/package-lock.json
+examples/go/parse_cangjie
+examples/rust/target/
+
+# cjpm build artifacts
+tests/testcase/**/target/
+tests/testcase/**/*.cjo
+tests/testcase/**/cjpm.lock

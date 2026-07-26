@@ -1,0 +1,8 @@
+[package]
+name = "cangjie-parser-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tree-sitter = "0.25"
+tree-sitter-cangjie = { path = "../../bindings/rust" }

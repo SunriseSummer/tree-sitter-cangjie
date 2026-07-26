@@ -1,0 +1,3 @@
+#ifndef TREE_SITTER_WASM_STRING_H_
+#define TREE_SITTER_WASM_STRING_H_
+#endif

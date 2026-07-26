@@ -1,0 +1,15 @@
+[package]
+  cjc-version = "1.0.5"
+  compile-option = ""
+  description = "nothing here"
+  link-option = ""
+  name = "chat"
+  src-dir = ""
+  target-dir = ""
+  version = "1.0.5"
+  output-type = "static"
+
+[package.package-configuration."chat.client"]
+  output-type = "executable"
+[package.package-configuration."chat.server"]
+  output-type = "executable"

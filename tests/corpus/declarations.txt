@@ -1,0 +1,136 @@
+========================================
+Package imports and aliases
+========================================
+
+package sample
+
+import std.collection.ArrayList as List
+import std.io.{println, print}
+import std.math.{abs, max as maxInt}
+
+public type Numbers = Array<Int64>
+foreign func printf(fmt: CString, ...): Int32
+
+main() {
+    let values: Numbers = [1, 2, 3]
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList (packageAlias packageName: (scoped_identifier scope: (scoped_identifier scope: (identifier) name: (identifier)) name: (identifier)) alias: (identifier))) (importList (subGroupOfPackage packageName: (scoped_identifier scope: (identifier) name: (identifier)) (packageGroup packageName: (identifier) packageName: (identifier)))) (importList (subGroupOfPackage packageName: (scoped_identifier scope: (identifier) name: (identifier)) (packageGroup packageName: (identifier) (packageAlias packageName: (identifier) alias: (identifier))))) (typeAlias (modifiers) name: (typeAliasName) type: (arrayType (typeArguments (Int64)))) (foreignDeclaration (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (userType (identifier)))) (returnType (Int32)))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (userType (identifier)) initilizer: (arrayLiteral (integerLiteral) (integerLiteral) (integerLiteral))))))
+
+========================================
+Type definitions and members
+========================================
+
+package sample
+
+interface Drawable {
+    func draw(): Unit
+    prop area: Float64 { get() { 0.0 } }
+}
+
+open class Shape <: Drawable {
+    public Shape(let name: String) {}
+
+    public open func draw(): Unit {
+        println(name)
+    }
+
+    public prop area: Float64 {
+        get() { 0.0 }
+    }
+}
+
+class Resource {
+    public init() {}
+    ~init() {}
+    static init() {}
+}
+
+struct Pair<T> {
+    public Pair(let first: T, let second: T) {}
+}
+
+enum Result<T> {
+    | Ok(T)
+    | Err(String)
+}
+
+extend Int64 {
+    public func twice(): Int64 {
+        return this + this
+    }
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (interfaceDefinition name: (interfaceName) (interfaceBody (interfaceBody (functionDefinition name: (funcName) (parameterList) (returnType (Unit)))) (propertyDefinition name: (propertyName) type: (Float64) getter: (block (floatLiteral))))) (classDefinition (modifiers) name: (className) (superOrInterface (identifier)) (classBody (primaryInit (modifiers) (className) (primaryInitParamList (unnamedMemberParam (parameter paraName: (identifier) type: (String))))) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Unit)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))) (propertyDefinition (modifiers) name: (propertyName) type: (Float64) getter: (block (floatLiteral))))) (classDefinition name: (className) (classBody (init (modifiers) (parameterList) (block)) (finalizer (block)) (init (modifiers) (parameterList) (block)))) (structDefinition name: (structName) (typeParameters (identifier)) (structBody (primaryInit (modifiers) (className) (primaryInitParamList (unnamedMemberParam (parameter paraName: (identifier) type: (userType (identifier)))) (unnamedMemberParam (parameter paraName: (identifier) type: (userType (identifier)))))))) (enumDefinition name: (enumName) (typeParameters (identifier)) (enumBody (enumConstructor name: (identifier) payload: (enumPayload type: (userType (identifier)))) (enumConstructor name: (identifier) payload: (enumPayload type: (String))))) (extendDefinition (extendType) (extendBody (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Int64)) (block (jumpExpression (binaryExpression left: (thisSuperExpression) right: (thisSuperExpression))))))))
+
+========================================
+Functions generics and lambdas
+========================================
+
+package sample
+
+func add(a: Int64, b: Int64): Int64 {
+    return a + b
+}
+
+func createUser(name: String, age!: Int64 = 18, city!: String = "Beijing"): String {
+    return "${name}, ${age}, ${city}"
+}
+
+func mapValue<T, U>(value: T, f: (T) -> U): U where T <: ToString {
+    return f(value)
+}
+
+extend String {
+    public operator func *(n: Int64): String {
+        return "${this}${n}"
+    }
+}
+
+main() {
+    let doubled = mapValue<Int64, Int64>(21) { x: Int64 => x * 2 }
+    let user = createUser("Alice", age: 20)
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64)) (parameter paraName: (identifier) type: (Int64))) (returnType (Int64)) (block (jumpExpression (binaryExpression left: (atomicVariable (varBindingPattern)) right: (atomicVariable (varBindingPattern)))))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (String)) (namedParameter paraName: (identifier) type: (Int64) defaultValue: (integerLiteral)) (namedParameter paraName: (identifier) type: (String) defaultValue: (stringLiteral))) (returnType (String)) (block (jumpExpression (stringLiteral (inlineExpression (atomicVariable (varBindingPattern))) (inlineExpression (atomicVariable (varBindingPattern))) (inlineExpression (atomicVariable (varBindingPattern))))))) (functionDefinition name: (funcName) (typeParameters (identifier) (identifier)) (parameterList (parameter paraName: (identifier) type: (userType (identifier))) (parameter paraName: (identifier) type: (arrowType (userType (identifier)) (userType (identifier))))) (returnType (userType (identifier))) (genericConstraints (genericConstraint (identifier) (userType (identifier)))) (block (jumpExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))))) (extendDefinition (extendType) (extendBody (operatorFunctionDefinition (modifiers) (operator) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (String)) (block (jumpExpression (stringLiteral (inlineExpression (thisSuperExpression)) (inlineExpression (atomicVariable (varBindingPattern))))))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (Int64) (Int64))) suffix: (callSuffix (integerLiteral))) suffix: (trailingLambdaExpression (lambdaParameters (lambdaParameter (varBindingPattern) (Int64))) (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral) (varBindingPattern) (integerLiteral)))))))
+
+========================================
+Nested generics and interface composition
+========================================
+
+package sample
+
+interface Reader<T> {}
+interface Writer<T> {}
+interface Duplex<T> <: Reader<T> & Writer<T> {}
+
+type Mapper<T, U> = (T) -> ((T) -> U)
+
+class Holder<T> {
+    public Holder(let value: Map<String, Array<T>>) {}
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (interfaceDefinition name: (interfaceName) (typeParameters (identifier))) (interfaceDefinition name: (interfaceName) (typeParameters (identifier))) (interfaceDefinition name: (interfaceName) (typeParameters (identifier)) (superOrInterface (identifier)) (typeParameters (identifier)) (superOrInterface (identifier)) (typeParameters (identifier))) (typeAlias name: (typeAliasName) (typeParameters (identifier) (identifier)) type: (arrowType (userType (identifier)) (tupleType (arrowType (userType (identifier)) (userType (identifier)))))) (classDefinition name: (className) (typeParameters (identifier)) (classBody (primaryInit (modifiers) (className) (primaryInitParamList (unnamedMemberParam (parameter paraName: (identifier) type: (userType (identifier) (typeArguments (String) (arrayType (typeArguments (userType (identifier)))))))))))))
+
+========================================
+Variable declarations without initializers
+========================================
+
+package sample
+
+main() {
+    let value: Int64
+    var other: ?Int64
+}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (Int64)) (variableDeclaration name: (variableName (varBindingPattern)) type: (prefixType (Int64))))))
