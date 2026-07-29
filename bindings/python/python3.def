@@ -1,4 +1,0 @@
-LIBRARY python3.dll
-EXPORTS
-    PyCapsule_New
-    PyModuleDef_Init

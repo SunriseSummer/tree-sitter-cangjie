@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - cangjie-1.0.5
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser-and-wasm:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            parser/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix parser
+      - name: Verify generated parser is committed
+        run: |
+          npm run generate
+          git diff --exit-code
+      - name: Test parser corpus
+        run: npm run test:parser
+      - name: Build and test WASM
+        run: |
+          npm run build:wasm
+          npm run test:wasm
+
+  node:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            target: linux-x64
+          - runner: ubuntu-22.04-arm
+            target: linux-arm64
+          - runner: windows-latest
+            target: win32-x64
+          - runner: windows-11-arm
+            target: win32-arm64
+          - runner: macos-15-intel
+            target: darwin-x64
+          - runner: macos-15
+            target: darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            bindings/node/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix bindings/node
+      - name: Stage and test Node prebuild
+        run: |
+          npm --prefix bindings/node run stage:prebuild -- ${{ matrix.target }}
+          npm run test:node
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-node-${{ matrix.target }}
+          path: bindings/node/prebuilds/
+          if-no-files-found: error
+          retention-days: 3
+
+  python:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            target: linux-x64
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+          - runner: windows-latest
+            target: win32-x64
+          - runner: windows-11-arm
+            target: win32-arm64
+          - runner: macos-15-intel
+            target: darwin-x64
+          - runner: macos-15
+            target: darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build and test Python wheel
+        uses: pypa/cibuildwheel@v4.1.0
+        with:
+          package-dir: bindings/python
+          output-dir: wheelhouse
+          config-file: "{package}/pyproject.toml"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-python-${{ matrix.target }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+          retention-days: 3

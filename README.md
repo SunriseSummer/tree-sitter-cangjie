@@ -1,176 +1,162 @@
 # Tree-Sitter-Cangjie
 
-本项目实现仓颉编程语言（1.0.5）的 [tree-sitter](https://tree-sitter.github.io/) 语法解析插件，同时为 C、Go、Node.js、Python、Rust、Swift 提供了 tree-sitter-cangjie 绑定，各绑定的源文件统一组织在 `bindings/` 目录下。
+`tree-sitter-cangjie` 是面向仓颉 1.0.5 的 Tree-sitter 语法解析器。
+仓库维护并发布三类产物：
 
-## 构建
+- Node.js 原生插件：发布到 npm 和 GitHub Releases。
+- Python 原生插件：暂时只发布到 GitHub Releases。
+- WebAssembly 语法模块：包含在 npm 包中，同时发布到 GitHub Releases。
 
-### 前置条件
+C、Go、Rust、Swift 等其他绑定不属于本仓库的维护范围。需要这些绑定的项目可以基于
+`parser/src/parser.c`、`parser/src/scanner.c` 和 `parser/src/tree_sitter/`
+自行集成。
 
-- Node.js（>= 18，推荐 22 LTS）
-- C/C++ 编译器
-- Python（>= 3.10）
+## 工程结构
 
-### 生成解析器
-
-```bash
-npx tree-sitter generate grammar/main.js
+```text
+tree-sitter-cangjie/
+├── package.json                 # 私有根工程：统一构建、测试和发布校验入口
+├── scripts/                     # 仓库级 WASM、快照和发布脚本
+├── tests/
+│   ├── node/                    # 跨 parser/binding 的 Node.js 集成测试
+│   └── fixtures/                # 实战仓颉项目、AST 快照和 query 测试数据
+├── parser/                      # 私有语法开发工程
+│   ├── grammar/                 # 仓颉语法定义
+│   ├── queries/                 # highlights、indents、locals、tags、textobjects
+│   ├── src/                     # 生成的 C 解析器和节点元数据
+│   ├── test/corpus/             # tree-sitter CLI 标准 corpus
+│   ├── package.json
+│   └── tree-sitter.json
+├── bindings/
+│   ├── node/                    # 独立 npm 发布工程和 N-API 桥接
+│   └── python/                  # 独立 Python 发布工程和 CPython 桥接
+└── .github/workflows/           # CI 与手动发布流水线
 ```
 
-生成的核心文件是 `src/parser.c`
+根工程只负责调度和集成测试，设置了 `private: true`，不会发布到 npm。
+`parser`、`bindings/node` 各自拥有独立的 `package-lock.json`，仓库不使用
+npm workspaces，避免发布包的依赖和根工程工具依赖互相污染。
 
-### 构建插件
+Node 发布工程会在构建和打包时，把 `parser` 中的语法定义、C 源码、queries、
+元数据和 WASM 暂存到自身目录。Python 工程通过本地 PEP 517 后端做同类暂存。
+这些目录均受 `.gitignore` 管理，最终 npm tarball、wheel 和 sdist 都是自包含的。
 
-> 需要在 Linux x64 平台执行如下构建脚本，部分构建目标涉及交叉编译
+## 安装和使用
 
-`builder/` 是用 python 实现的构建工具包，可一键构建各语言绑定的 release 库文件，支持命令行参数控制：
-
-```bash
-python -m builder                                    # 构建全部目标
-python -m builder wasm node-linux-x64                # 仅构建 WASM 和 Node.js Linux
-python -m builder c-linux-x64 c-win-x64              # 构建 Linux 和 Windows C 库
-python -m builder --auto-install                     # 自动安装缺失的构建工具
-python -m builder --list                             # 列出所有可用目标
-```
-
-构建产物输出到 `release/` 目录。
-
-## 使用
-
-更多完整的使用示例见 [`examples/`](examples/) 目录，包含 Python、Node.js、C、Go、Rust 五种语言的示例项目。
-
-### 在 Python 中使用
-
-安装`tree-sitter`引擎：
+### Node.js
 
 ```shell
-pip install tree-sitter~=0.25
+npm install tree-sitter tree-sitter-cangjie
 ```
 
-安装`tree-sitter-cangjie`插件：
+```javascript
+const Parser = require("tree-sitter");
+const Cangjie = require("tree-sitter-cangjie");
+
+const parser = new Parser();
+parser.setLanguage(Cangjie);
+const tree = parser.parse('main() { println("Hello, Cangjie!") }\n');
+console.log(tree.rootNode.toString());
+```
+
+npm 包提供 Linux、Windows、macOS 的 x64 和 ARM64 预构建插件。其他平台会尝试
+通过 `node-gyp` 使用包内的 C 源码回退构建。
+
+### Python
+
+Python wheel 暂时只进入 GitHub Releases，不发布到 PyPI。下载适合当前平台的
+wheel 后安装：
 
 ```shell
-pip install release/tree_sitter_cangjie_xxx.whl
+pip install tree-sitter
+pip install ./tree_sitter_cangjie-1.0.5-cp310-abi3-<platform>.whl
 ```
-
-在 python 程序中使用：
 
 ```python
-import tree_sitter_cangjie
 from tree_sitter import Language, Parser
+import tree_sitter_cangjie
 
-// 初始化解析器
-CJ_LANGUAGE = Language(tree_sitter_cangjie.language())
-parser = Parser(CJ_LANGUAGE)
-
-// 解析仓颉代码
-tree = parser.parse(b'''
-main() {
-    println("Hello, Cangjie!")
-}
-''')
-
-print(tree.root_node.sexp())
+language = Language(tree_sitter_cangjie.language())
+parser = Parser(language)
+tree = parser.parse(b'main() { println("Hello, Cangjie!") }\n')
+print(tree.root_node)
 ```
 
-### 在 Node.js 中使用
+wheel 使用 CPython 3.11 构建，并限制为 CPython 3.10 stable ABI，因此文件标记为
+`cp310-abi3`，支持标准 GIL 构建的 CPython 3.10 及以上版本。
 
-安装`tree-sitter`引擎：
-```shell
-npm install tree-sitter@0.25.0
-```
+### WebAssembly
 
-在 node.js 程序中使用：
+GitHub Release 和 npm 包都包含 `tree-sitter-cangjie.wasm`：
+
 ```javascript
-const fs = require("node:fs");
-const Parser = require("tree-sitter");
-const Cangjie = require("release/tree_sitter_cangjie-linux-x64.node");
+const { Language, Parser } = require("web-tree-sitter");
 
-function main() {
-  // 初始化解析器
-  const parser = new Parser();
-  parser.setLanguage(Cangjie);
-
-  // 读取并解析源文件
-  const source = fs.readFileSync("sample.cj", "utf-8");
-  const tree = parser.parse(source);
-  const root = tree.rootNode;
-  // ...
-}
+await Parser.init();
+const language = await Language.load("tree-sitter-cangjie.wasm");
+const parser = new Parser();
+parser.setLanguage(language);
+const tree = parser.parse("main() {}\n");
 ```
 
-## 测试
+## 本地开发
 
-测试套件位于 `tests/` 目录，提供快照测试，以及更严格的 corpus 基线测试。
+推荐使用 Node.js 24 和 npm 11。在仓库根目录安装三个独立 Node 工程：
 
-testcase + corpus 测试：
-
-```bash
-# 按前面指导安装依赖并构建
-npm test
+```shell
+npm ci
+npm run bootstrap
 ```
 
-单独运行 corpus 基线测试：
+常用入口：
 
-```bash
-npm run test:corpus
+```shell
+npm run generate          # 重新生成 parser/src
+npm run build             # 生成 parser，并构建 Node 与 WASM
+npm test                  # parser corpus、Node binding、集成测试、WASM
+npm run test:node         # 实战项目 AST、corpus 镜像和 queries
+npm run snapshots:update  # 更新实战项目 AST 快照
+npm run corpus:update     # 根据标准 corpus 更新测试基线
+npm run verify:release    # 校验版本、目录边界和发布元数据
 ```
 
-### 测试内容
+`npm run generate` 必须在提交内容完整时保持工作树无差异。WASM 构建还要求
+Clang 带 WebAssembly 后端，并且系统中可用 `wasm-ld`。
 
-测试分为两层：
+构建 Python 分发包：
 
-- `tests/testcase/`：覆盖所有 `.cj` 文件的 AST 快照回归测试，并递归扫描更深层子目录中的示例文件。
-- `tests/corpus/`：面向核心语法结构的 corpus 基线测试，逐条校验解析树输出。每条 corpus case 还会额外执行"无末尾换行符"变体测试，确保解析器在代码不以换行符结尾时产生相同的解析结果。
-
-### 测试结果校验
-
-`tests/testcase/` 采用 **AST 快照对比** 的方式校验解析结果：每个 `.cj` 测试文件在同目录下都有一个同名的 `.ast` 文件，其中保存了该文件的预期解析树 S-expression 输出。测试时解析 `.cj` 文件，将实际解析树与 `.ast` 文件内容逐字对比，确保解析结果完全一致。
-
-`tests/corpus/` 采用 **corpus 基线对比**：每个 corpus case 都包含源码片段和对应的预期解析树，`tests/test_corpus.py` 与 `tests/test_corpus.js` 都会额外检查结果中不出现 `ERROR` / `MISSING` 节点，用于约束核心语法结构不被意外破坏。
-
-## 项目文件说明
-
+```shell
+python -m pip install build
+npm run build:python
 ```
-tree-sitter-cangjie/
-├── package.json                # npm 配置 / tree-sitter 工具链入口
-├── tree-sitter.json            # tree-sitter 元数据
-├── grammar/
-│   ├── main.js                   # 主语法定义入口
-│   ├── expression.js             # 表达式语法定义
-│   ├── toplevelobjects.js        # 顶层对象语法定义（类、结构体、枚举等）
-│   ├── types.js                  # 类型与模式语法定义
-│   ├── literal.js                # 字面量语法（数字、字符串、Rune、字节）
-│   └── common.js                 # 通用工具函数
-├── src/
-│   ├── parser.c                # 生成的解析器 C 代码
-│   ├── scanner.c               # 外部扫描器（多行原始字符串，支持单/双引号）
-│   ├── grammar.json            # 生成的语法 JSON
-│   └── node-types.json         # 节点类型定义
-├── queries/
-│   ├── highlights.scm          # 语法高亮查询
-│   ├── indents.scm             # 缩进规则
-│   ├── locals.scm              # 局部变量/作用域查询
-│   ├── tags.scm                # 标签查询
-│   ├── textobjects.scm         # 文本对象查询
-│   └── tests/                  # SCM 查询测试
-├── builder/                    # 一键构建发布工具包（python -m builder）
-├── bindings/                   # 多语言绑定（含各语言构建配置）
-│   ├── c/                      # C 绑定（CMakeLists.txt、Makefile）
-│   ├── go/                     # Go 绑定
-│   ├── node/                   # Node.js 绑定（binding.gyp）
-│   ├── python/                 # Python 绑定（pyproject.toml、setup.py）
-│   ├── rust/                   # Rust 绑定（Cargo.toml）
-│   └── swift/                  # Swift 绑定（Package.swift）
-├── examples/                   # 使用示例项目
-│   ├── sample.cj               # 共用的仓颉示例源文件
-│   ├── python/                 # Python 示例
-│   ├── node/                   # Node.js 示例
-│   ├── c/                      # C 示例
-│   ├── go/                     # Go 示例
-│   └── rust/                   # Rust 示例
-├── tests/                      # 测试套件
-│   ├── test.js                 # Node.js 测试脚本
-│   ├── test_corpus.js          # corpus 基线测试脚本
-│   ├── corpus/                 # corpus 基线测试用例
-│   └── testcase/               # 仓颉测试文件与示例项目（递归扫描）
+
+安装生成的 wheel 后运行：
+
+```shell
+npm run test:python
 ```
+
+详细测试布局和维护方式见 `tests/README.md`。
+
+## 持续集成和发布
+
+`.github/workflows/ci.yml` 会验证 parser 生成结果和 corpus、WASM、六个平台目标的
+Node 原生插件，以及六个平台目标的 Python wheel。
+
+`.github/workflows/release.yml` 由 `cangjie-1.0.5` 分支手动触发。它不会回写或推送
+源码；会构建并测试全部产物、组装自包含 npm tarball、创建 GitHub Release、
+生成校验和与构建来源证明，并把同一个 Node tarball 发布到 npm。Python wheel 和
+sdist 暂时只进入 GitHub Release。
+
+npm 首次发布可以使用仓库 Secret `NPM_TOKEN_BOOTSTRAP`。配置 Trusted Publisher
+后应删除该 Secret，后续使用 GitHub Actions OIDC：
+
+- GitHub owner：`SunriseSummer`
+- Repository：`tree-sitter-cangjie`
+- Workflow：`release.yml`
+- Environment：留空
+- Allowed action：`npm publish`
+
+## 许可证
+
+本项目使用木兰宽松许可证第 2 版（MulanPSL-2.0），详见 `LICENSE`。

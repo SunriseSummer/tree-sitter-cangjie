@@ -6,35 +6,51 @@ node_modules/
 build/
 release/
 prebuilds/
+wheelhouse/
 
 # Build artifacts
 *.so
 *.o
 *.a
 *.dylib
+*.dll
+*.node
+*.pyd
 *.wasm
 *.rlib
+*.tgz
 
 # Python build intermediates
-__pycache__
+__pycache__/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.venv/
+venv/
 dist/
-*.egg-info
+*.egg-info/
+pip-wheel-metadata/
+bindings/python/vendor/
 
-# C build intermediates
-bindings/c/*.pc
+# Parser assets staged into the independent Node package
+bindings/node/LICENSE
+bindings/node/grammar/
+bindings/node/queries/
+bindings/node/src/grammar.json
+bindings/node/src/node-types.json
+bindings/node/src/parser.c
+bindings/node/src/scanner.c
+bindings/node/src/tree_sitter/
+bindings/node/tree-sitter.json
 
-# Rust build artifacts
-bindings/rust/target/
-Cargo.lock
-
-# Examples build artifacts
-examples/c/parse_cangjie
-examples/node/node_modules/
-examples/node/package-lock.json
-examples/go/parse_cangjie
-examples/rust/target/
+# Release intermediates
+/release-notes.md
 
 # cjpm build artifacts
-tests/testcase/**/target/
-tests/testcase/**/*.cjo
-tests/testcase/**/cjpm.lock
+tests/fixtures/projects/**/target/
+tests/fixtures/projects/**/*.cjo
+tests/fixtures/projects/**/cjpm.lock

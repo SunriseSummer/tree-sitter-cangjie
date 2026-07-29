@@ -1,0 +1,69 @@
+{
+  "name": "tree-sitter-cangjie",
+  "version": "1.0.5",
+  "description": "Cangjie parser for tree-sitter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SunriseSummer/tree-sitter-cangjie.git",
+    "directory": "bindings/node"
+  },
+  "homepage": "https://github.com/SunriseSummer/tree-sitter-cangjie#readme",
+  "bugs": {
+    "url": "https://github.com/SunriseSummer/tree-sitter-cangjie/issues"
+  },
+  "license": "MulanPSL-2.0",
+  "author": {
+    "name": "EastGreatSummer",
+    "email": "EastGreatSummer@gmail.com"
+  },
+  "main": "index.js",
+  "types": "index.d.ts",
+  "gypfile": true,
+  "keywords": [
+    "incremental",
+    "parsing",
+    "tree-sitter",
+    "cangjie"
+  ],
+  "files": [
+    "binding.gyp",
+    "index.js",
+    "index.d.ts",
+    "LICENSE",
+    "grammar/*.js",
+    "prebuilds/**",
+    "queries/*.scm",
+    "scripts/stage-parser.mjs",
+    "src/**",
+    "tree-sitter.json",
+    "tree-sitter-cangjie.wasm"
+  ],
+  "dependencies": {
+    "node-addon-api": "^8.9.0",
+    "node-gyp-build": "^4.8.4"
+  },
+  "devDependencies": {
+    "node-gyp": "^12.4.0",
+    "tree-sitter": "^0.25.1"
+  },
+  "peerDependencies": {
+    "tree-sitter": "^0.25.0"
+  },
+  "peerDependenciesMeta": {
+    "tree-sitter": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "scripts": {
+    "install": "node scripts/stage-parser.mjs && node-gyp-build",
+    "build": "node scripts/stage-parser.mjs && node-gyp rebuild",
+    "stage:parser": "node scripts/stage-parser.mjs",
+    "stage:prebuild": "node scripts/stage-prebuild.mjs",
+    "prepack": "node scripts/stage-parser.mjs --require-wasm",
+    "postpack": "node scripts/stage-parser.mjs --clean"
+  }
+}

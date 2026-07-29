@@ -1,60 +1,28 @@
 {
-  "name": "tree-sitter-cangjie",
+  "name": "tree-sitter-cangjie-repository",
   "version": "1.0.5",
-  "description": "Cangjie parser for tree-sitter",
-  "repository": "https://gitcode.com/Cangjie-SIG/tree-sitter-cangjie",
+  "private": true,
+  "description": "Repository orchestration and integration tests for tree-sitter-cangjie",
   "license": "MulanPSL-2.0",
-  "author": {
-    "name": "EastGreatSummer",
-    "email": "EastGreatSummer@gmail.com"
-  },
-  "main": "bindings/node",
-  "types": "bindings/node",
-  "keywords": [
-    "incremental",
-    "parsing",
-    "tree-sitter",
-    "cangjie"
-  ],
-  "files": [
-    "MIGRATION.md",
-    "grammar/*",
-    "tree-sitter.json",
-    "bindings/node/binding.gyp",
-    "bindings/node/binding.cc",
-    "bindings/node/index.js",
-    "bindings/node/index.d.ts",
-    "prebuilds/**",
-    "queries/*",
-    "src/**",
-    "*.wasm"
-  ],
-  "dependencies": {
-    "node-addon-api": "^8.2.1",
-    "node-gyp-build": "^4.8.2"
+  "scripts": {
+    "bootstrap": "npm ci --prefix parser && npm ci --prefix bindings/node",
+    "generate": "npm --prefix parser run generate",
+    "build": "npm run generate && npm run build:node && npm run build:wasm",
+    "build:node": "npm --prefix bindings/node run build",
+    "build:wasm": "node scripts/build-wasm.mjs parser/tree-sitter-cangjie.wasm",
+    "build:python": "python -m build bindings/python",
+    "test": "npm run test:parser && npm run test:node && npm run build:wasm && npm run test:wasm",
+    "test:parser": "npm --prefix parser test",
+    "test:node": "node --test --test-concurrency=1 tests/node/parser.test.js tests/node/corpus.test.js tests/node/queries/run_all.js",
+    "test:wasm": "node scripts/test-wasm.mjs parser/tree-sitter-cangjie.wasm",
+    "test:python": "python -m pytest bindings/python/tests",
+    "snapshots:update": "node scripts/generate-ast-snapshots.cjs",
+    "corpus:update": "node scripts/update-corpus.cjs",
+    "verify:release": "node scripts/validate-release.mjs",
+    "verify": "npm test && npm run verify:release"
   },
   "devDependencies": {
-    "prebuildify": "^6.0.1",
-    "tree-sitter": "^0.25.0",
-    "tree-sitter-cli": "^0.26.6",
-    "web-tree-sitter": "0.26.6"
-  },
-  "peerDependencies": {
-    "tree-sitter": "^0.25.0"
-  },
-  "peerDependenciesMeta": {
-    "tree-sitter": {
-      "optional": true
-    }
-  },
-  "scripts": {
-    "install": "echo 'Skipping build, run `npm run build` manually'",
-    "build": "npx tree-sitter generate grammar/main.js && cd bindings/node && node-gyp rebuild",
-    "build:wasm": "tree-sitter build --wasm --output release/tree-sitter-cangjie.wasm .",
-    "prestart": "npm run build:wasm",
-    "start": "tree-sitter playground",
-    "test": "node --test --test-concurrency=1 tests/test.js tests/test_corpus.js queries/tests/node/run_all.js",
-    "test:corpus": "node --test --test-concurrency=1 tests/test_corpus.js",
-    "test:queries": "node --test --test-concurrency=1 queries/tests/node/run_all.js"
+    "tree-sitter": "^0.25.1",
+    "web-tree-sitter": "0.26.11"
   }
 }

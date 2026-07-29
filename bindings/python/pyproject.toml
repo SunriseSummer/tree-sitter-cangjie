@@ -1,11 +1,15 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools>=77"]
+build-backend = "build_backend"
+backend-path = ["."]
 
 [project]
 name = "tree-sitter-cangjie"
-description = "Cangjie grammar for tree-sitter"
 version = "1.0.5"
+description = "Cangjie grammar for tree-sitter"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MulanPSL-2.0"
 keywords = ["incremental", "parsing", "tree-sitter", "cangjie"]
 classifiers = [
   "Intended Audience :: Developers",
@@ -13,16 +17,22 @@ classifiers = [
   "Topic :: Text Processing :: Linguistic",
   "Typing :: Typed",
 ]
-authors = [{ name = "vchuoshen6", email = "vchuoshen6@163.com" }]
-requires-python = ">=3.10"
-license = "MulanPSL-2.0"
+authors = [
+  { name = "vchuoshen6", email = "vchuoshen6@163.com" },
+]
 
 [project.urls]
-Homepage = "https://gitcode.com/Cangjie-SIG/tree-sitter-cangjie"
+Homepage = "https://github.com/SunriseSummer/tree-sitter-cangjie"
+Repository = "https://github.com/SunriseSummer/tree-sitter-cangjie"
+Issues = "https://github.com/SunriseSummer/tree-sitter-cangjie/issues"
 
 [project.optional-dependencies]
 core = ["tree-sitter~=0.25"]
 
 [tool.cibuildwheel]
-build = "cp310-*"
+# Windows ARM64 has no CPython 3.10 build. Compile every target with CPython
+# 3.11 while setup.py limits the extension to the CPython 3.10 stable ABI.
+build = "cp311-*"
 build-frontend = "build"
+test-requires = ["pytest", "tree-sitter~=0.25"]
+test-command = "pytest {package}/tests"

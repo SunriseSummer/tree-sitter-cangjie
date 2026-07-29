@@ -1,0 +1,15 @@
+{
+  "name": "tree-sitter-cangjie-parser",
+  "version": "1.0.5",
+  "private": true,
+  "description": "Grammar development project for tree-sitter-cangjie",
+  "license": "MulanPSL-2.0",
+  "scripts": {
+    "generate": "tree-sitter generate grammar/main.js",
+    "test": "tree-sitter test",
+    "start": "tree-sitter playground"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.26.11"
+  }
+}

@@ -1,0 +1,348 @@
+name: Release
+
+# Manually triggered from the cangjie-1.0.5 branch. The workflow reads the
+# committed version, builds and tests every release artifact, creates tag
+# v<version> and the GitHub Release, then publishes the exact Node tarball to
+# npm. It never edits or pushes source files. Python artifacts are intentionally
+# GitHub-Release-only until PyPI publishing is enabled in a future change.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  node-prebuilds:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            target: linux-x64
+          - runner: ubuntu-22.04-arm
+            target: linux-arm64
+          - runner: windows-latest
+            target: win32-x64
+          - runner: windows-11-arm
+            target: win32-arm64
+          - runner: macos-15-intel
+            target: darwin-x64
+          - runner: macos-15
+            target: darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            bindings/node/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix bindings/node
+      - name: Stage and test Node prebuild
+        run: |
+          npm --prefix bindings/node run stage:prebuild -- ${{ matrix.target }}
+          npm run test:node
+      - uses: actions/upload-artifact@v7
+        with:
+          name: node-prebuild-${{ matrix.target }}
+          path: bindings/node/prebuilds/
+          if-no-files-found: error
+
+  python-wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            target: linux-x64
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+            arch: aarch64
+          - runner: windows-latest
+            target: win32-x64
+            arch: AMD64
+          - runner: windows-11-arm
+            target: win32-arm64
+            arch: ARM64
+          - runner: macos-15-intel
+            target: darwin-x64
+            arch: x86_64
+          - runner: macos-15
+            target: darwin-arm64
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build and test Python wheel
+        uses: pypa/cibuildwheel@v4.1.0
+        env:
+          CIBW_ARCHS: ${{ matrix.arch }}
+        with:
+          package-dir: bindings/python
+          output-dir: wheelhouse
+          config-file: "{package}/pyproject.toml"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-${{ matrix.target }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
+  python-sdist:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+      - name: Build and test source distribution
+        run: |
+          python -m pip install --upgrade build
+          python -m build --sdist --outdir dist bindings/python
+          python -m venv "$RUNNER_TEMP/sdist-test"
+          "$RUNNER_TEMP/sdist-test/bin/python" -m pip install \
+            pytest "tree-sitter~=0.25" dist/tree_sitter_cangjie-*.tar.gz
+          mkdir -p "$RUNNER_TEMP/sdist-source"
+          tar -xzf dist/tree_sitter_cangjie-*.tar.gz \
+            -C "$RUNNER_TEMP/sdist-source"
+          "$RUNNER_TEMP/sdist-test/bin/python" -m pytest \
+            "$RUNNER_TEMP/sdist-source"/tree_sitter_cangjie-*/tests
+          "$RUNNER_TEMP/sdist-test/bin/python" - <<'PY'
+          from tree_sitter import Language, Parser
+          import tree_sitter_cangjie
+
+          language = Language(tree_sitter_cangjie.language())
+          tree = Parser(language).parse(b"package release_test\nmain() {}\n")
+          assert not tree.root_node.has_error, tree.root_node
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  wasm:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            parser/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix parser
+      - name: Verify generated parser is committed
+        run: |
+          npm run generate
+          git diff --exit-code
+      - name: Test parser corpus
+        run: npm run test:parser
+      - name: Build and test WASM
+        run: |
+          npm run build:wasm
+          npm run test:wasm
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wasm
+          path: parser/tree-sitter-cangjie.wasm
+          if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    needs:
+      - node-prebuilds
+      - python-wheels
+      - python-sdist
+      - wasm
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Ensure npm supports trusted publishing
+        run: npm install --global npm@11
+      - name: Verify committed release metadata
+        run: |
+          if [ "$GITHUB_REF_TYPE" != "branch" ] || [ "$GITHUB_REF_NAME" != "cangjie-1.0.5" ]; then
+            echo "::error::Run this workflow from the cangjie-1.0.5 branch"
+            exit 1
+          fi
+          npm ci
+          npm ci --prefix parser
+          npm ci --prefix bindings/node
+          npm run verify:release
+          git diff --exit-code
+      - name: Resolve version
+        id: version
+        run: |
+          node -e "process.stdout.write('value=' + require('./bindings/node/package.json').version + '\n')" \
+            >> "$GITHUB_OUTPUT"
+      - name: Download Node prebuilds
+        uses: actions/download-artifact@v8
+        with:
+          pattern: node-prebuild-*
+          path: bindings/node/prebuilds
+          merge-multiple: true
+      - name: Download Python distributions
+        uses: actions/download-artifact@v8
+        with:
+          pattern: python-*
+          path: release
+          merge-multiple: true
+      - name: Download WASM
+        uses: actions/download-artifact@v8
+        with:
+          name: wasm
+          path: release
+      - name: Assemble and test the npm package
+        run: |
+          set -euo pipefail
+          V="${{ steps.version.outputs.value }}"
+          cp release/tree-sitter-cangjie.wasm parser/
+          node bindings/node/scripts/stage-parser.mjs --require-wasm
+
+          cd bindings/node
+          npm pack --dry-run --ignore-scripts --json > ../../release/npm-pack.json
+          node ../../scripts/validate-npm-pack.mjs ../../release/npm-pack.json
+          npm pack --ignore-scripts --pack-destination ../../release
+          cd ../..
+          node bindings/node/scripts/stage-parser.mjs --clean
+
+          CONSUMER="$RUNNER_TEMP/tree-sitter-cangjie-consumer"
+          mkdir -p "$CONSUMER"
+          cd "$CONSUMER"
+          npm init --yes >/dev/null
+          npm install \
+            "$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$V.tgz" \
+            "tree-sitter@^0.25.0"
+          node <<'NODE'
+          const Parser = require("tree-sitter");
+          const Cangjie = require("tree-sitter-cangjie");
+          const parser = new Parser();
+          parser.setLanguage(Cangjie);
+          const tree = parser.parse("package release_test\nmain() {}\n");
+          if (tree.rootNode.hasError) throw new Error(tree.rootNode.toString());
+          console.log(tree.rootNode.toString());
+          NODE
+      - name: Generate checksums
+        run: |
+          cd release
+          sha256sum \
+            tree-sitter-cangjie-*.tgz \
+            tree-sitter-cangjie.wasm \
+            tree_sitter_cangjie-*.whl \
+            tree_sitter_cangjie-*.tar.gz > SHA256SUMS
+          cat SHA256SUMS
+      - name: Attest release artifacts
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release/tree-sitter-cangjie-*.tgz
+            release/tree-sitter-cangjie.wasm
+            release/tree_sitter_cangjie-*.whl
+            release/tree_sitter_cangjie-*.tar.gz
+            release/SHA256SUMS
+      - name: Prepare release notes and validate tag
+        run: |
+          V="${{ steps.version.outputs.value }}"
+          TAG="v$V"
+          node scripts/extract-release-notes.mjs "$V" > release-notes.md
+          if git rev-parse --verify "$TAG^{commit}" >/dev/null 2>&1; then
+            TAG_SHA=$(git rev-parse "$TAG^{commit}")
+            if [ "$TAG_SHA" != "$GITHUB_SHA" ]; then
+              echo "::error::$TAG already points to $TAG_SHA, not $GITHUB_SHA"
+              exit 1
+            fi
+          fi
+      - name: Create or refresh GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.version.outputs.value }}"
+          TAG="v$V"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              release/tree-sitter-cangjie-*.tgz \
+              release/tree-sitter-cangjie.wasm \
+              release/tree_sitter_cangjie-*.whl \
+              release/tree_sitter_cangjie-*.tar.gz \
+              release/SHA256SUMS \
+              --clobber
+          else
+            gh release create "$TAG" \
+              release/tree-sitter-cangjie-*.tgz \
+              release/tree-sitter-cangjie.wasm \
+              release/tree_sitter_cangjie-*.whl \
+              release/tree_sitter_cangjie-*.tar.gz \
+              release/SHA256SUMS \
+              --target "$GITHUB_SHA" \
+              --title "$TAG" \
+              --notes-file release-notes.md
+          fi
+      - name: Publish exact Node tarball to npm
+        env:
+          NPM_TOKEN_BOOTSTRAP: ${{ secrets.NPM_TOKEN_BOOTSTRAP }}
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+        run: |
+          set -euo pipefail
+          V="${{ steps.version.outputs.value }}"
+          PACKAGE="tree-sitter-cangjie"
+
+          if npm view "$PACKAGE@$V" version >/dev/null 2>&1; then
+            echo "skip $PACKAGE@$V (already published)"
+            exit 0
+          fi
+
+          if [ -n "${NPM_TOKEN_BOOTSTRAP:-}" ]; then
+            NPMRC="$RUNNER_TEMP/tree-sitter-cangjie-bootstrap.npmrc"
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN_BOOTSTRAP" > "$NPMRC"
+            chmod 600 "$NPMRC"
+            export NPM_CONFIG_USERCONFIG="$NPMRC"
+            trap 'rm -f "$NPMRC"' EXIT
+            echo "npm auth: bootstrap token"
+          else
+            echo "npm auth: OIDC trusted publishing"
+          fi
+
+          npm publish "release/tree-sitter-cangjie-$V.tgz" \
+            --access public \
+            --tag latest \
+            --provenance
+      - name: Verify npm registry
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+        run: |
+          V="${{ steps.version.outputs.value }}"
+          for attempt in 1 2 3 4 5 6; do
+            if npm view "tree-sitter-cangjie@$V" version >/dev/null 2>&1; then
+              echo "verified tree-sitter-cangjie@$V"
+              exit 0
+            fi
+            echo "waiting for npm registry propagation ($attempt)"
+            sleep 10
+          done
+          echo "::error::tree-sitter-cangjie@$V did not appear on npm"
+          exit 1
