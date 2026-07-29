@@ -13,11 +13,10 @@ on:
         required: true
         type: boolean
         default: false
-      version:
-        description: Existing release version used only when npm_only is enabled
-        required: true
+      retry_version:
+        description: Existing release version required when npm_only is enabled
+        required: false
         type: string
-        default: "1.0.5"
 
 permissions:
   contents: read
@@ -343,6 +342,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
+          registry-url: https://registry.npmjs.org
           package-manager-cache: false
       - name: Ensure npm supports trusted publishing
         run: npm install --global npm@11
@@ -356,9 +356,14 @@ jobs:
         if: ${{ inputs.npm_only }}
         env:
           GH_TOKEN: ${{ github.token }}
+          RETRY_VERSION: ${{ inputs.retry_version }}
         run: |
           set -euo pipefail
-          V="${{ inputs.version }}"
+          V="$RETRY_VERSION"
+          if [ -z "$V" ]; then
+            echo "::error::retry_version is required when npm_only is enabled"
+            exit 1
+          fi
           mkdir -p release
           gh release download "v$V" \
             --repo "$GITHUB_REPOSITORY" \
@@ -366,12 +371,13 @@ jobs:
             --dir release
       - name: Publish exact Node tarball to npm
         env:
-          NPM_TOKEN_BOOTSTRAP: ${{ secrets.NPM_TOKEN_BOOTSTRAP }}
+          NPM_ONLY: ${{ inputs.npm_only }}
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+          RETRY_VERSION: ${{ inputs.retry_version }}
         run: |
           set -euo pipefail
-          if [ "${{ inputs.npm_only }}" = "true" ]; then
-            V="${{ inputs.version }}"
+          if [ "$NPM_ONLY" = "true" ]; then
+            V="$RETRY_VERSION"
           else
             V="${{ needs.release.outputs.version }}"
           fi
@@ -382,20 +388,7 @@ jobs:
             exit 0
           fi
 
-          if [ -n "${NPM_TOKEN_BOOTSTRAP:-}" ]; then
-            NPMRC="$RUNNER_TEMP/tree-sitter-cangjie-bootstrap.npmrc"
-            printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN_BOOTSTRAP" > "$NPMRC"
-            chmod 600 "$NPMRC"
-            export NPM_CONFIG_USERCONFIG="$NPMRC"
-            trap 'rm -f "$NPMRC"' EXIT
-            echo "npm auth: bootstrap token"
-          elif ! npm view "$PACKAGE" name >/dev/null 2>&1; then
-            echo "::error::The first npm publish requires NPM_TOKEN_BOOTSTRAP"
-            exit 1
-          else
-            echo "npm auth: OIDC trusted publishing"
-          fi
-
+          echo "npm auth: OIDC trusted publishing"
           TARBALL="$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$V.tgz"
           test -f "$TARBALL"
           npm publish "$TARBALL" \
@@ -404,10 +397,12 @@ jobs:
             --provenance
       - name: Verify npm registry
         env:
+          NPM_ONLY: ${{ inputs.npm_only }}
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+          RETRY_VERSION: ${{ inputs.retry_version }}
         run: |
-          if [ "${{ inputs.npm_only }}" = "true" ]; then
-            V="${{ inputs.version }}"
+          if [ "$NPM_ONLY" = "true" ]; then
+            V="$RETRY_VERSION"
           else
             V="${{ needs.release.outputs.version }}"
           fi

@@ -211,7 +211,9 @@ for (const requiredReleaseFragment of [
   "group: release-${{ github.repository }}-${{ github.ref }}",
   "npm_only:",
   "default: false",
-  `default: "${version}"`,
+  "retry_version:",
+  "retry_version is required when npm_only is enabled",
+  "RETRY_VERSION: ${{ inputs.retry_version }}",
   "needs.release.result == 'success' || inputs.npm_only",
   "npm-publish:",
   "pypi-publish:",
@@ -232,6 +234,16 @@ for (const requiredReleaseFragment of [
     `release workflow is missing ${requiredReleaseFragment}`
   );
 }
+assert.equal(
+  releaseWorkflow.includes("NPM_TOKEN_BOOTSTRAP"),
+  false,
+  "release workflow must use npm OIDC instead of the bootstrap token"
+);
+assert.equal(
+  releaseWorkflow.includes("_authToken"),
+  false,
+  "release workflow must not create token-based npm configuration"
+);
 assert.equal(
   releaseWorkflow.includes("environment: pypi"),
   false,

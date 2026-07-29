@@ -147,9 +147,8 @@ Node 原生插件，以及六个平台目标的 Python wheel。
 生成校验和与构建来源证明。GitHub Release 创建成功后，npm tarball 与 Python
 wheel/sdist 会分别通过独立的最小权限 job 并行发布到 npm 和 PyPI。
 
-npm 要求包已存在才能配置 Trusted Publisher，因此首次发布必须在本仓库配置
-Secret `NPM_TOKEN_BOOTSTRAP`。首发成功并配置 Trusted Publisher 后应删除该
-Secret，后续使用 GitHub Actions OIDC：
+npm 发布使用 Trusted Publisher 和 GitHub Actions OIDC，不使用长期 npm Token。
+Trusted Publisher 配置如下：
 
 - GitHub owner：`SunriseSummer`
 - Repository：`tree-sitter-cangjie`
@@ -157,8 +156,10 @@ Secret，后续使用 GitHub Actions OIDC：
 - Environment：留空
 - Allowed action：`npm publish`
 
-PyPI 使用已经配置的 Pending Trusted Publisher 首次创建并发布项目，不需要
-密码、API Token 或 GitHub Environment：
+仓库不需要也不应保留 `NPM_TOKEN_BOOTSTRAP` 等 npm 发布 Secret。
+
+PyPI 发布同样使用 Trusted Publisher 和 GitHub Actions OIDC，不需要密码、
+API Token 或 GitHub Environment：
 
 - PyPI project：`tree-sitter-cangjie`
 - PyPI owner：`sunrisesummer`（个人账号）
@@ -168,8 +169,9 @@ PyPI 使用已经配置的 Pending Trusted Publisher 首次创建并发布项目
 - Environment：留空
 
 如果完整发布中只有 npm job 失败，不要移动已有版本标签，也不要重新构建已经发布
-到 PyPI 的文件。重新运行 `release.yml`，启用 `npm_only` 并填写已有版本号；工作流
-会从对应 GitHub Release 下载原始 npm tarball，只执行 npm 发布及 Registry 校验。
+到 PyPI 的文件。重新运行 `release.yml`，启用 `npm_only` 并在 `retry_version`
+填写已有版本号；工作流会从对应 GitHub Release 下载原始 npm tarball，只执行 npm
+发布及 Registry 校验。正常完整发布应保持 `npm_only` 关闭，`retry_version` 留空。
 
 ## 许可证
 
