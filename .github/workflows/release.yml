@@ -6,7 +6,18 @@ name: Release
 # npm and the tested Python distributions to PyPI in parallel. It never edits
 # or pushes source files.
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      npm_only:
+        description: Retry npm publishing from an existing GitHub Release
+        required: true
+        type: boolean
+        default: false
+      version:
+        description: Existing release version used only when npm_only is enabled
+        required: true
+        type: string
+        default: "1.0.5"
 
 permissions:
   contents: read
@@ -17,6 +28,7 @@ concurrency:
 
 jobs:
   node-prebuilds:
+    if: ${{ !inputs.npm_only }}
     strategy:
       fail-fast: false
       matrix:
@@ -58,6 +70,7 @@ jobs:
           if-no-files-found: error
 
   python-wheels:
+    if: ${{ !inputs.npm_only }}
     strategy:
       fail-fast: false
       matrix:
@@ -100,6 +113,7 @@ jobs:
           if-no-files-found: error
 
   python-sdist:
+    if: ${{ !inputs.npm_only }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
@@ -135,6 +149,7 @@ jobs:
           if-no-files-found: error
 
   wasm:
+    if: ${{ !inputs.npm_only }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -166,6 +181,7 @@ jobs:
           if-no-files-found: error
 
   release:
+    if: ${{ !inputs.npm_only }}
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.version.outputs.value }}
@@ -318,6 +334,7 @@ jobs:
   npm-publish:
     name: Publish Node package to npm
     needs: release
+    if: ${{ always() && (needs.release.result == 'success' || inputs.npm_only) }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -329,18 +346,35 @@ jobs:
           package-manager-cache: false
       - name: Ensure npm supports trusted publishing
         run: npm install --global npm@11
-      - name: Download exact npm package
+      - name: Download exact npm package from current run
+        if: ${{ !inputs.npm_only }}
         uses: actions/download-artifact@v8
         with:
           name: npm-package
           path: release
+      - name: Download exact npm package from GitHub Release
+        if: ${{ inputs.npm_only }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V="${{ inputs.version }}"
+          mkdir -p release
+          gh release download "v$V" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "tree-sitter-cangjie-$V.tgz" \
+            --dir release
       - name: Publish exact Node tarball to npm
         env:
           NPM_TOKEN_BOOTSTRAP: ${{ secrets.NPM_TOKEN_BOOTSTRAP }}
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
         run: |
           set -euo pipefail
-          V="${{ needs.release.outputs.version }}"
+          if [ "${{ inputs.npm_only }}" = "true" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${{ needs.release.outputs.version }}"
+          fi
           PACKAGE="tree-sitter-cangjie"
 
           if npm view "$PACKAGE@$V" version >/dev/null 2>&1; then
@@ -372,7 +406,11 @@ jobs:
         env:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
         run: |
-          V="${{ needs.release.outputs.version }}"
+          if [ "${{ inputs.npm_only }}" = "true" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${{ needs.release.outputs.version }}"
+          fi
           for attempt in 1 2 3 4 5 6; do
             if npm view "tree-sitter-cangjie@$V" version >/dev/null 2>&1; then
               echo "verified tree-sitter-cangjie@$V"
@@ -387,6 +425,7 @@ jobs:
   pypi-publish:
     name: Publish Python distributions to PyPI
     needs: release
+    if: ${{ !inputs.npm_only }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read

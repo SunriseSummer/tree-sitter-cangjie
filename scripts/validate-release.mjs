@@ -209,10 +209,16 @@ assert.ok(
 );
 for (const requiredReleaseFragment of [
   "group: release-${{ github.repository }}-${{ github.ref }}",
+  "npm_only:",
+  "default: false",
+  `default: "${version}"`,
+  "needs.release.result == 'success' || inputs.npm_only",
   "npm-publish:",
   "pypi-publish:",
   "name: npm-package",
   "needs: release",
+  'gh release download "v$V"',
+  '--pattern "tree-sitter-cangjie-$V.tgz"',
   'TARBALL="$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$V.tgz"',
   'test -f "$TARBALL"',
   'npm publish "$TARBALL"',

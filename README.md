@@ -167,6 +167,10 @@ PyPI 使用已经配置的 Pending Trusted Publisher 首次创建并发布项目
 - Workflow：`release.yml`
 - Environment：留空
 
+如果完整发布中只有 npm job 失败，不要移动已有版本标签，也不要重新构建已经发布
+到 PyPI 的文件。重新运行 `release.yml`，启用 `npm_only` 并填写已有版本号；工作流
+会从对应 GitHub Release 下载原始 npm tarball，只执行 npm 发布及 Registry 校验。
+
 ## 许可证
 
 本项目使用木兰宽松许可证第 2 版（MulanPSL-2.0），详见 `LICENSE`。
