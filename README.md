@@ -4,7 +4,7 @@
 仓库维护并发布三类产物：
 
 - Node.js 原生插件：发布到 npm 和 GitHub Releases。
-- Python 原生插件：暂时只发布到 GitHub Releases。
+- Python 原生插件：发布到 PyPI 和 GitHub Releases。
 - WebAssembly 语法模块：包含在 npm 包中，同时发布到 GitHub Releases。
 
 C、Go、Rust、Swift 等其他绑定不属于本仓库的维护范围。需要这些绑定的项目可以基于
@@ -64,12 +64,11 @@ npm 包提供 Linux、Windows、macOS 的 x64 和 ARM64 预构建插件。其他
 
 ### Python
 
-Python wheel 暂时只进入 GitHub Releases，不发布到 PyPI。下载适合当前平台的
-wheel 后安装：
+Python wheel 和 sdist 同时发布到 PyPI 与 GitHub Releases。推荐直接从 PyPI
+安装解析器及其 Python Tree-sitter 运行时：
 
 ```shell
-pip install tree-sitter
-pip install ./tree_sitter_cangjie-1.0.5-cp310-abi3-<platform>.whl
+pip install "tree-sitter-cangjie[core]==1.0.5"
 ```
 
 ```python
@@ -145,17 +144,28 @@ Node 原生插件，以及六个平台目标的 Python wheel。
 
 `.github/workflows/release.yml` 由 `cangjie-1.0.5` 分支手动触发。它不会回写或推送
 源码；会构建并测试全部产物、组装自包含 npm tarball、创建 GitHub Release、
-生成校验和与构建来源证明，并把同一个 Node tarball 发布到 npm。Python wheel 和
-sdist 暂时只进入 GitHub Release。
+生成校验和与构建来源证明。GitHub Release 创建成功后，npm tarball 与 Python
+wheel/sdist 会分别通过独立的最小权限 job 并行发布到 npm 和 PyPI。
 
-npm 首次发布可以使用仓库 Secret `NPM_TOKEN_BOOTSTRAP`。配置 Trusted Publisher
-后应删除该 Secret，后续使用 GitHub Actions OIDC：
+npm 要求包已存在才能配置 Trusted Publisher，因此首次发布必须在本仓库配置
+Secret `NPM_TOKEN_BOOTSTRAP`。首发成功并配置 Trusted Publisher 后应删除该
+Secret，后续使用 GitHub Actions OIDC：
 
 - GitHub owner：`SunriseSummer`
 - Repository：`tree-sitter-cangjie`
 - Workflow：`release.yml`
 - Environment：留空
 - Allowed action：`npm publish`
+
+PyPI 使用已经配置的 Pending Trusted Publisher 首次创建并发布项目，不需要
+密码、API Token 或 GitHub Environment：
+
+- PyPI project：`tree-sitter-cangjie`
+- PyPI owner：`sunrisesummer`（个人账号）
+- GitHub owner：`SunriseSummer`
+- Repository：`tree-sitter-cangjie`
+- Workflow：`release.yml`
+- Environment：留空
 
 ## 许可证
 

@@ -6,8 +6,8 @@ All notable changes to this project are documented in this file.
 
 - Publish the Cangjie 1.0.5 grammar as a Node.js native addon for Linux,
   Windows, and macOS on x64 and ARM64.
-- Provide CPython 3.10+ stable-ABI wheels and a Python source distribution in
-  GitHub Releases.
+- Publish CPython 3.10+ stable-ABI wheels and a Python source distribution to
+  both PyPI and GitHub Releases.
 - Keep the complete Python packaging project under `bindings/python`, with
   automatically staged parser sources for self-contained source distributions.
 - Split grammar development into the private `parser` Node.js project and npm

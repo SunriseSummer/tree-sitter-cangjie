@@ -3,13 +3,17 @@ name: Release
 # Manually triggered from the cangjie-1.0.5 branch. The workflow reads the
 # committed version, builds and tests every release artifact, creates tag
 # v<version> and the GitHub Release, then publishes the exact Node tarball to
-# npm. It never edits or pushes source files. Python artifacts are intentionally
-# GitHub-Release-only until PyPI publishing is enabled in a future change.
+# npm and the tested Python distributions to PyPI in parallel. It never edits
+# or pushes source files.
 on:
   workflow_dispatch: {}
 
 permissions:
   contents: read
+
+concurrency:
+  group: release-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   node-prebuilds:
@@ -163,6 +167,8 @@ jobs:
 
   release:
     runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.version.outputs.value }}
     permissions:
       contents: write
       id-token: write
@@ -247,6 +253,12 @@ jobs:
           if (tree.rootNode.hasError) throw new Error(tree.rootNode.toString());
           console.log(tree.rootNode.toString());
           NODE
+      - name: Upload exact npm package
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-package
+          path: release/tree-sitter-cangjie-*.tgz
+          if-no-files-found: error
       - name: Generate checksums
         run: |
           cd release
@@ -302,13 +314,33 @@ jobs:
               --title "$TAG" \
               --notes-file release-notes.md
           fi
+
+  npm-publish:
+    name: Publish Node package to npm
+    needs: release
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Ensure npm supports trusted publishing
+        run: npm install --global npm@11
+      - name: Download exact npm package
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-package
+          path: release
       - name: Publish exact Node tarball to npm
         env:
           NPM_TOKEN_BOOTSTRAP: ${{ secrets.NPM_TOKEN_BOOTSTRAP }}
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
         run: |
           set -euo pipefail
-          V="${{ steps.version.outputs.value }}"
+          V="${{ needs.release.outputs.version }}"
           PACKAGE="tree-sitter-cangjie"
 
           if npm view "$PACKAGE@$V" version >/dev/null 2>&1; then
@@ -323,6 +355,9 @@ jobs:
             export NPM_CONFIG_USERCONFIG="$NPMRC"
             trap 'rm -f "$NPMRC"' EXIT
             echo "npm auth: bootstrap token"
+          elif ! npm view "$PACKAGE" name >/dev/null 2>&1; then
+            echo "::error::The first npm publish requires NPM_TOKEN_BOOTSTRAP"
+            exit 1
           else
             echo "npm auth: OIDC trusted publishing"
           fi
@@ -335,7 +370,7 @@ jobs:
         env:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
         run: |
-          V="${{ steps.version.outputs.value }}"
+          V="${{ needs.release.outputs.version }}"
           for attempt in 1 2 3 4 5 6; do
             if npm view "tree-sitter-cangjie@$V" version >/dev/null 2>&1; then
               echo "verified tree-sitter-cangjie@$V"
@@ -345,4 +380,51 @@ jobs:
             sleep 10
           done
           echo "::error::tree-sitter-cangjie@$V did not appear on npm"
+          exit 1
+
+  pypi-publish:
+    name: Publish Python distributions to PyPI
+    needs: release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download Python distributions
+        uses: actions/download-artifact@v8
+        with:
+          pattern: python-*
+          path: dist
+          merge-multiple: true
+      - name: Verify Python distribution set
+        run: |
+          set -euo pipefail
+          test "$(find dist -maxdepth 1 -type f -name '*.whl' | wc -l)" -eq 8
+          test "$(find dist -maxdepth 1 -type f -name '*.tar.gz' | wc -l)" -eq 1
+          if find dist -maxdepth 1 -type f \
+            ! -name '*.whl' ! -name '*.tar.gz' | grep -q .; then
+            echo "::error::Unexpected file in the PyPI distribution set"
+            find dist -maxdepth 1 -type f -print
+            exit 1
+          fi
+          find dist -maxdepth 1 -type f -print | sort
+      - name: Publish Python distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          skip-existing: true
+      - name: Verify PyPI registry
+        run: |
+          V="${{ needs.release.outputs.version }}"
+          for attempt in 1 2 3 4 5 6; do
+            if curl --fail --silent --show-error \
+              "https://pypi.org/pypi/tree-sitter-cangjie/$V/json" \
+              >/dev/null; then
+              echo "verified tree-sitter-cangjie==$V"
+              exit 0
+            fi
+            echo "waiting for PyPI propagation ($attempt)"
+            sleep 10
+          done
+          echo "::error::tree-sitter-cangjie==$V did not appear on PyPI"
           exit 1

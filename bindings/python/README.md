@@ -4,7 +4,7 @@ This directory contains the Python packaging entry point and native bridge for
 the Cangjie tree-sitter grammar.
 
 The wheel depends on the `tree-sitter` Python package at runtime. Release
-wheels and source distributions are currently published through the
+wheels and source distributions are published to PyPI and through the
 repository's GitHub Releases page.
 
 From the repository root, build both distributions with:

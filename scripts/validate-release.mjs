@@ -207,5 +207,26 @@ assert.ok(
   releaseWorkflow.includes("CIBW_ARCHS: ${{ matrix.arch }}"),
   "release workflow must pin each Python wheel job to its matrix architecture"
 );
+for (const requiredReleaseFragment of [
+  "group: release-${{ github.repository }}-${{ github.ref }}",
+  "npm-publish:",
+  "pypi-publish:",
+  "name: npm-package",
+  "needs: release",
+  "pypa/gh-action-pypi-publish@release/v1",
+  "packages-dir: dist/",
+  "skip-existing: true",
+  "https://pypi.org/pypi/tree-sitter-cangjie/$V/json",
+]) {
+  assert.ok(
+    releaseWorkflow.includes(requiredReleaseFragment),
+    `release workflow is missing ${requiredReleaseFragment}`
+  );
+}
+assert.equal(
+  releaseWorkflow.includes("environment: pypi"),
+  false,
+  "PyPI publisher was configured without a GitHub Environment"
+);
 
 console.log(`release metadata validated: tree-sitter-cangjie@${version}`);
