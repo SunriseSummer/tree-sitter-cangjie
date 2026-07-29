@@ -86,6 +86,7 @@ const M = {
         [$._topObjects],
         [$.primaryInit, $.thisSuperExpression],
         [$.atomicVariable],
+        [$.atomicVariable, $._genericAtomicVariable],
         [$.macroExpression],
         [$.interfaceBody],
         [$.arrowType, $._typeList],
@@ -357,6 +358,7 @@ const M = {
             optional($.modifiers),
             TOKENS.OPERATOR, TOKENS.FUNC,
             alias(choice(
+                token(seq('(', ')')),
                 token(seq('[', ']')),
                 token('!'), token('+'), token('-'), token('**'), token('*'), token('/'), token('%'), 
                 token('<<'), token('>>'), token('<'), token('>'), token('<='), token('>='), 
@@ -703,7 +705,17 @@ const M = {
         )),
 
         postfixExpression: $ => prec.right(29, seq(
-            field('operand', $._expression),
+            field('operand', choice(
+                // Inside another call's argument list, `Name<T>(...)` is also a
+                // valid chain of relational expressions. Give the complete
+                // generic postfix operand a small dynamic preference while
+                // retaining the public `atomicVariable` node shape.
+                prec.dynamic(1, alias(
+                    $._genericAtomicVariable,
+                    $.atomicVariable
+                )),
+                $._expression
+            )),
             field('suffix', choice(
                 prec(PREC.MEMBER, $.fieldAccess),
                 prec(PREC.ARRAY, $.indexAccess),
@@ -713,6 +725,11 @@ const M = {
                 $.trailingLambdaExpression,
             ))
         )),
+
+        _genericAtomicVariable: $ => seq(
+            $._varBindingPattern,
+            $.typeArguments
+        ),
 
         fieldAccess: $ => seq('.', $.atomicVariable),
         callSuffix: $ => seq(

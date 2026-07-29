@@ -254,3 +254,35 @@ main() {
 ---
 
 (translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (String)) (block (jumpExpression (matchExpression (atomicVariable (varBindingPattern)) (matchCase (constantPattern (integerLiteral)) (stringLiteral)) (matchCase (constantPattern (integerLiteral)) (constantPattern (integerLiteral)) (stringLiteral)) (matchCase (constantPattern (integerLiteral)) (stringLiteral)) (matchCase (wildcardPattern) (stringLiteral)))))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Float64))) (returnType (String)) (block (jumpExpression (matchExpression (atomicVariable (varBindingPattern)) (matchCase (constantPattern (floatLiteral)) (stringLiteral)) (matchCase (wildcardPattern) (stringLiteral)))))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (unaryExpression argument: (integerLiteral)))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (unaryExpression argument: (floatLiteral)))))))))
+
+========================================
+Generic calls nested inside call arguments
+========================================
+
+main() {
+    let direct = Success<String>("ok")
+    consume(Success<String>("ok"))
+    consume(make<Array<String>>(values))
+    let comparison = left < 3
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (String))) suffix: (callSuffix (stringLiteral)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (String))) suffix: (callSuffix (stringLiteral))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (arrayType (typeArguments (String))))) suffix: (callSuffix (atomicVariable (varBindingPattern)))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral))))))
+
+========================================
+Function-call operator declarations
+========================================
+
+class Callable {
+    public operator func ()(value: Int64): Callable { this }
+}
+
+main() {
+    let callable = Callable()
+    callable(2)
+}
+
+---
+
+(translationUnit (classDefinition name: (className) (classBody (operatorFunctionDefinition (modifiers) (operator) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (userType (identifier))) (block (thisSuperExpression))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral))))))

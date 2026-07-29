@@ -2381,6 +2381,22 @@
                   "members": [
                     {
                       "type": "STRING",
+                      "value": "("
+                    },
+                    {
+                      "type": "STRING",
+                      "value": ")"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "TOKEN",
+                "content": {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
                       "value": "["
                     },
                     {
@@ -6086,8 +6102,26 @@
             "type": "FIELD",
             "name": "operand",
             "content": {
-              "type": "SYMBOL",
-              "name": "_expression"
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "PREC_DYNAMIC",
+                  "value": 1,
+                  "content": {
+                    "type": "ALIAS",
+                    "content": {
+                      "type": "SYMBOL",
+                      "name": "_genericAtomicVariable"
+                    },
+                    "named": true,
+                    "value": "atomicVariable"
+                  }
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_expression"
+                }
+              ]
             }
           },
           {
@@ -6145,6 +6179,19 @@
           }
         ]
       }
+    },
+    "_genericAtomicVariable": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_varBindingPattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "typeArguments"
+        }
+      ]
     },
     "fieldAccess": {
       "type": "SEQ",
@@ -9898,6 +9945,10 @@
     ],
     [
       "atomicVariable"
+    ],
+    [
+      "atomicVariable",
+      "_genericAtomicVariable"
     ],
     [
       "macroExpression"
