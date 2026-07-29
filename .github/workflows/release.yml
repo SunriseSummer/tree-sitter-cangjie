@@ -362,7 +362,9 @@ jobs:
             echo "npm auth: OIDC trusted publishing"
           fi
 
-          npm publish "release/tree-sitter-cangjie-$V.tgz" \
+          TARBALL="$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$V.tgz"
+          test -f "$TARBALL"
+          npm publish "$TARBALL" \
             --access public \
             --tag latest \
             --provenance
