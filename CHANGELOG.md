@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.5-post1] - 2026-07-31
+
+- Refresh the Python package documentation published on PyPI.
+- Separate complete GitHub Release creation from npm and PyPI publication,
+  with one-pass and registry-selective publishing operations.
+
 ## [1.0.5] - 2026-07-29
 
 - Publish the Cangjie 1.0.5 grammar as a Node.js native addon for Linux,

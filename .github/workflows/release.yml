@@ -1,21 +1,27 @@
 name: Release
 
-# Manually triggered from the cangjie-1.0.5 branch. The workflow reads the
-# committed version, builds and tests every release artifact, creates tag
-# v<version> and the GitHub Release, then publishes the exact Node tarball to
-# npm and the tested Python distributions to PyPI in parallel. It never edits
+# onepass and release build and test the complete Node, Python, and WASM
+# distribution set before creating a complete GitHub Release. onepass then
+# publishes both registries. publish operations consume exact artifacts from
+# an existing GitHub Release without rebuilding them. The workflow never edits
 # or pushes source files.
 on:
   workflow_dispatch:
     inputs:
-      npm_only:
-        description: Retry npm publishing from an existing GitHub Release
+      operation:
+        description: Build a release or publish an existing GitHub Release
         required: true
-        type: boolean
-        default: false
-      retry_version:
-        description: Existing release version required when npm_only is enabled
-        required: false
+        type: choice
+        options:
+          - onepass
+          - release
+          - publish
+          - publish_npm
+          - publish_pypi
+        default: onepass
+      release_version:
+        description: Release version for this operation (without v)
+        required: true
         type: string
 
 permissions:
@@ -26,8 +32,112 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    runs-on: ubuntu-22.04
+    outputs:
+      node_version: ${{ steps.versions.outputs.node }}
+      python_artifact_version: ${{ steps.versions.outputs.python_artifact }}
+      release_version: ${{ steps.versions.outputs.release }}
+    steps:
+      - if: ${{ inputs.operation == 'onepass' || inputs.operation == 'release' }}
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Validate operation and resolve versions
+        id: versions
+        env:
+          OPERATION: ${{ inputs.operation }}
+          REQUESTED_RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          set -euo pipefail
+          if [ "$OPERATION" = "onepass" ] || [ "$OPERATION" = "release" ]; then
+            if [ "$GITHUB_REF_TYPE" != "branch" ] || [ "$GITHUB_REF_NAME" != "cangjie-1.0.5" ]; then
+              echo "::error::Run onepass and release from the cangjie-1.0.5 branch"
+              exit 1
+            fi
+            node scripts/validate-release.mjs
+            git diff --exit-code
+          fi
+
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require("node:fs");
+          const operation = process.env.OPERATION;
+          const validOperations = new Set([
+            "onepass",
+            "release",
+            "publish",
+            "publish_npm",
+            "publish_pypi",
+          ]);
+          if (!validOperations.has(operation)) {
+            throw new Error(`unsupported release operation: ${operation}`);
+          }
+          const buildsRelease = operation === "onepass" || operation === "release";
+          const version = process.env.REQUESTED_RELEASE_VERSION?.trim();
+
+          if (!version) {
+            throw new Error("release_version is required for every operation");
+          }
+
+          if (
+            !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/.test(
+              version
+            )
+          ) {
+            throw new Error(
+              `release version must be npm SemVer without a v prefix: ${version}`
+            );
+          }
+
+          if (buildsRelease) {
+            const nodeVersion =
+              require("./bindings/node/package.json").version;
+            const pyproject = fs.readFileSync(
+              "bindings/python/pyproject.toml",
+              "utf8"
+            );
+            const pythonVersion = pyproject.match(
+              /^\s*version\s*=\s*"([^"]+)"\s*$/m
+            )?.[1];
+            if (!pythonVersion) {
+              throw new Error("Unable to resolve the Python package version");
+            }
+            if (nodeVersion !== pythonVersion) {
+              throw new Error(
+                `Node and Python source versions must match: ` +
+                `${nodeVersion} != ${pythonVersion}`
+              );
+            }
+            if (version !== nodeVersion) {
+              throw new Error(
+                `release_version must match committed package versions: ` +
+                `${version} != ${nodeVersion}`
+              );
+            }
+          }
+
+          const pythonArtifactVersion = version.replace(
+            /[-_.]post[-_.]?(\d+)$/i,
+            (_, number) => `.post${Number(number)}`
+          );
+          process.stdout.write(
+            `node=${version}\n` +
+            `python_artifact=${pythonArtifactVersion}\n` +
+            `release=${version}\n`
+          );
+          NODE
+
   node-prebuilds:
-    if: ${{ !inputs.npm_only }}
+    needs: preflight
+    if: >-
+      ${{
+        needs.preflight.result == 'success' &&
+        (inputs.operation == 'onepass' || inputs.operation == 'release')
+      }}
     strategy:
       fail-fast: false
       matrix:
@@ -69,7 +179,12 @@ jobs:
           if-no-files-found: error
 
   python-wheels:
-    if: ${{ !inputs.npm_only }}
+    needs: preflight
+    if: >-
+      ${{
+        needs.preflight.result == 'success' &&
+        (inputs.operation == 'onepass' || inputs.operation == 'release')
+      }}
     strategy:
       fail-fast: false
       matrix:
@@ -112,7 +227,12 @@ jobs:
           if-no-files-found: error
 
   python-sdist:
-    if: ${{ !inputs.npm_only }}
+    needs: preflight
+    if: >-
+      ${{
+        needs.preflight.result == 'success' &&
+        (inputs.operation == 'onepass' || inputs.operation == 'release')
+      }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
@@ -137,7 +257,12 @@ jobs:
           if-no-files-found: error
 
   wasm:
-    if: ${{ !inputs.npm_only }}
+    needs: preflight
+    if: >-
+      ${{
+        needs.preflight.result == 'success' &&
+        (inputs.operation == 'onepass' || inputs.operation == 'release')
+      }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -169,16 +294,24 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: ${{ !inputs.npm_only }}
+    if: >-
+      ${{
+        always() &&
+        needs.preflight.result == 'success' &&
+        (inputs.operation == 'onepass' || inputs.operation == 'release') &&
+        needs.node-prebuilds.result == 'success' &&
+        needs.python-wheels.result == 'success' &&
+        needs.python-sdist.result == 'success' &&
+        needs.wasm.result == 'success'
+      }}
     runs-on: ubuntu-22.04
-    outputs:
-      version: ${{ steps.version.outputs.value }}
     permissions:
       contents: write
       id-token: write
       attestations: write
       artifact-metadata: write
     needs:
+      - preflight
       - node-prebuilds
       - python-wheels
       - python-sdist
@@ -194,22 +327,6 @@ jobs:
           package-manager-cache: false
       - name: Ensure npm supports trusted publishing
         run: npm install --global npm@11
-      - name: Verify committed release metadata
-        run: |
-          if [ "$GITHUB_REF_TYPE" != "branch" ] || [ "$GITHUB_REF_NAME" != "cangjie-1.0.5" ]; then
-            echo "::error::Run this workflow from the cangjie-1.0.5 branch"
-            exit 1
-          fi
-          npm ci
-          npm ci --prefix parser
-          npm ci --prefix bindings/node
-          npm run verify:release
-          git diff --exit-code
-      - name: Resolve version
-        id: version
-        run: |
-          node -e "process.stdout.write('value=' + require('./bindings/node/package.json').version + '\n')" \
-            >> "$GITHUB_OUTPUT"
       - name: Download Node prebuilds
         uses: actions/download-artifact@v8
         with:
@@ -222,6 +339,15 @@ jobs:
           pattern: python-*
           path: release
           merge-multiple: true
+      - name: Verify Python release artifacts
+        run: |
+          set -euo pipefail
+          V="${{ needs.preflight.outputs.python_artifact_version }}"
+          PREFIX="tree_sitter_cangjie-$V"
+          test "$(find release -maxdepth 1 -type f -name "$PREFIX-*.whl" | wc -l)" -eq 8
+          test "$(find release -maxdepth 1 -type f -name '*.whl' | wc -l)" -eq 8
+          test -f "release/$PREFIX.tar.gz"
+          test "$(find release -maxdepth 1 -type f -name '*.tar.gz' | wc -l)" -eq 1
       - name: Download WASM
         uses: actions/download-artifact@v8
         with:
@@ -230,7 +356,7 @@ jobs:
       - name: Assemble and test the npm package
         run: |
           set -euo pipefail
-          V="${{ steps.version.outputs.value }}"
+          V="${{ needs.preflight.outputs.node_version }}"
           cp release/tree-sitter-cangjie.wasm parser/
           node bindings/node/scripts/stage-parser.mjs --require-wasm
 
@@ -257,12 +383,6 @@ jobs:
           if (tree.rootNode.hasError) throw new Error(tree.rootNode.toString());
           console.log(tree.rootNode.toString());
           NODE
-      - name: Upload exact npm package
-        uses: actions/upload-artifact@v7
-        with:
-          name: npm-package
-          path: release/tree-sitter-cangjie-*.tgz
-          if-no-files-found: error
       - name: Generate checksums
         run: |
           cd release
@@ -283,7 +403,7 @@ jobs:
             release/SHA256SUMS
       - name: Prepare release notes and validate tag
         run: |
-          V="${{ steps.version.outputs.value }}"
+          V="${{ needs.preflight.outputs.release_version }}"
           TAG="v$V"
           node scripts/extract-release-notes.mjs "$V" > release-notes.md
           if git rev-parse --verify "$TAG^{commit}" >/dev/null 2>&1; then
@@ -293,27 +413,23 @@ jobs:
               exit 1
             fi
           fi
-      - name: Create or refresh GitHub Release
+      - name: Create or refresh complete GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          V="${{ steps.version.outputs.value }}"
+          V="${{ needs.preflight.outputs.release_version }}"
           TAG="v$V"
+          assets=(
+            release/tree-sitter-cangjie-*.tgz
+            release/tree-sitter-cangjie.wasm
+            release/tree_sitter_cangjie-*.whl
+            release/tree_sitter_cangjie-*.tar.gz
+            release/SHA256SUMS
+          )
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" \
-              release/tree-sitter-cangjie-*.tgz \
-              release/tree-sitter-cangjie.wasm \
-              release/tree_sitter_cangjie-*.whl \
-              release/tree_sitter_cangjie-*.tar.gz \
-              release/SHA256SUMS \
-              --clobber
+            gh release upload "$TAG" "${assets[@]}" --clobber
           else
-            gh release create "$TAG" \
-              release/tree-sitter-cangjie-*.tgz \
-              release/tree-sitter-cangjie.wasm \
-              release/tree_sitter_cangjie-*.whl \
-              release/tree_sitter_cangjie-*.tar.gz \
-              release/SHA256SUMS \
+            gh release create "$TAG" "${assets[@]}" \
               --target "$GITHUB_SHA" \
               --title "$TAG" \
               --notes-file release-notes.md
@@ -321,8 +437,17 @@ jobs:
 
   npm-publish:
     name: Publish Node package to npm
-    needs: release
-    if: ${{ always() && (needs.release.result == 'success' || inputs.npm_only) }}
+    needs:
+      - preflight
+      - release
+    if: >-
+      ${{
+        always() &&
+        needs.preflight.result == 'success' &&
+        ((needs.release.result == 'success' && inputs.operation == 'onepass') ||
+          inputs.operation == 'publish' ||
+          inputs.operation == 'publish_npm')
+      }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -335,121 +460,116 @@ jobs:
           package-manager-cache: false
       - name: Ensure npm supports trusted publishing
         run: npm install --global npm@11
-      - name: Download exact npm package from current run
-        if: ${{ !inputs.npm_only }}
-        uses: actions/download-artifact@v8
-        with:
-          name: npm-package
-          path: release
-      - name: Download exact npm package from GitHub Release
-        if: ${{ inputs.npm_only }}
+      - name: Download and verify npm package from GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          RETRY_VERSION: ${{ inputs.retry_version }}
+          RELEASE_VERSION: ${{ needs.preflight.outputs.release_version }}
         run: |
           set -euo pipefail
-          V="$RETRY_VERSION"
-          if [ -z "$V" ]; then
-            echo "::error::retry_version is required when npm_only is enabled"
-            exit 1
-          fi
           mkdir -p release
-          gh release download "v$V" \
+          gh release download "v$RELEASE_VERSION" \
             --repo "$GITHUB_REPOSITORY" \
-            --pattern "tree-sitter-cangjie-$V.tgz" \
+            --pattern "tree-sitter-cangjie-$RELEASE_VERSION.tgz" \
+            --pattern "SHA256SUMS" \
             --dir release
+          cd release
+          test -f "tree-sitter-cangjie-$RELEASE_VERSION.tgz"
+          grep -F "  tree-sitter-cangjie-$RELEASE_VERSION.tgz" SHA256SUMS
+          sha256sum --check --ignore-missing SHA256SUMS
       - name: Publish exact Node tarball to npm
         env:
-          NPM_ONLY: ${{ inputs.npm_only }}
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
-          RETRY_VERSION: ${{ inputs.retry_version }}
+          RELEASE_VERSION: ${{ needs.preflight.outputs.release_version }}
         run: |
           set -euo pipefail
-          if [ "$NPM_ONLY" = "true" ]; then
-            V="$RETRY_VERSION"
-          else
-            V="${{ needs.release.outputs.version }}"
-          fi
           PACKAGE="tree-sitter-cangjie"
-
-          if npm view "$PACKAGE@$V" version >/dev/null 2>&1; then
-            echo "skip $PACKAGE@$V (already published)"
+          if npm view "$PACKAGE@$RELEASE_VERSION" version >/dev/null 2>&1; then
+            echo "skip $PACKAGE@$RELEASE_VERSION (already published)"
             exit 0
           fi
 
           echo "npm auth: OIDC trusted publishing"
-          TARBALL="$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$V.tgz"
-          test -f "$TARBALL"
+          TARBALL="$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$RELEASE_VERSION.tgz"
           npm publish "$TARBALL" \
             --access public \
             --tag latest \
             --provenance
       - name: Verify npm registry
         env:
-          NPM_ONLY: ${{ inputs.npm_only }}
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
-          RETRY_VERSION: ${{ inputs.retry_version }}
+          RELEASE_VERSION: ${{ needs.preflight.outputs.release_version }}
         run: |
-          if [ "$NPM_ONLY" = "true" ]; then
-            V="$RETRY_VERSION"
-          else
-            V="${{ needs.release.outputs.version }}"
-          fi
           for attempt in 1 2 3 4 5 6; do
-            if npm view "tree-sitter-cangjie@$V" version >/dev/null 2>&1; then
-              echo "verified tree-sitter-cangjie@$V"
+            if npm view "tree-sitter-cangjie@$RELEASE_VERSION" version >/dev/null 2>&1; then
+              echo "verified tree-sitter-cangjie@$RELEASE_VERSION"
               exit 0
             fi
             echo "waiting for npm registry propagation ($attempt)"
             sleep 10
           done
-          echo "::error::tree-sitter-cangjie@$V did not appear on npm"
+          echo "::error::tree-sitter-cangjie@$RELEASE_VERSION did not appear on npm"
           exit 1
 
   pypi-publish:
     name: Publish Python distributions to PyPI
-    needs: release
-    if: ${{ !inputs.npm_only }}
+    needs:
+      - preflight
+      - release
+    if: >-
+      ${{
+        always() &&
+        needs.preflight.result == 'success' &&
+        ((needs.release.result == 'success' && inputs.operation == 'onepass') ||
+          inputs.operation == 'publish' ||
+          inputs.operation == 'publish_pypi')
+      }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
     steps:
-      - name: Download Python distributions
-        uses: actions/download-artifact@v8
-        with:
-          pattern: python-*
-          path: dist
-          merge-multiple: true
-      - name: Verify Python distribution set
+      - name: Download and verify Python distributions from GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.preflight.outputs.release_version }}
+          PYTHON_VERSION: ${{ needs.preflight.outputs.python_artifact_version }}
         run: |
           set -euo pipefail
-          test "$(find dist -maxdepth 1 -type f -name '*.whl' | wc -l)" -eq 8
-          test "$(find dist -maxdepth 1 -type f -name '*.tar.gz' | wc -l)" -eq 1
-          if find dist -maxdepth 1 -type f \
-            ! -name '*.whl' ! -name '*.tar.gz' | grep -q .; then
-            echo "::error::Unexpected file in the PyPI distribution set"
-            find dist -maxdepth 1 -type f -print
-            exit 1
-          fi
-          find dist -maxdepth 1 -type f -print | sort
+          mkdir -p release dist
+          gh release download "v$RELEASE_VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "tree_sitter_cangjie-$PYTHON_VERSION-*.whl" \
+            --pattern "tree_sitter_cangjie-$PYTHON_VERSION.tar.gz" \
+            --pattern "SHA256SUMS" \
+            --dir release
+
+          PREFIX="tree_sitter_cangjie-$PYTHON_VERSION"
+          test "$(find release -maxdepth 1 -type f -name "$PREFIX-*.whl" | wc -l)" -eq 8
+          test -f "release/$PREFIX.tar.gz"
+          grep -F "  $PREFIX" release/SHA256SUMS
+          (
+            cd release
+            sha256sum --check --ignore-missing SHA256SUMS
+          )
+          cp release/"$PREFIX"-*.whl release/"$PREFIX".tar.gz dist/
       - name: Publish Python distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
           skip-existing: true
       - name: Verify PyPI registry
+        env:
+          PYTHON_VERSION: ${{ needs.preflight.outputs.python_artifact_version }}
         run: |
-          V="${{ needs.release.outputs.version }}"
           for attempt in 1 2 3 4 5 6; do
             if curl --fail --silent --show-error \
-              "https://pypi.org/pypi/tree-sitter-cangjie/$V/json" \
+              "https://pypi.org/pypi/tree-sitter-cangjie/$PYTHON_VERSION/json" \
               >/dev/null; then
-              echo "verified tree-sitter-cangjie==$V"
+              echo "verified tree-sitter-cangjie==$PYTHON_VERSION"
               exit 0
             fi
             echo "waiting for PyPI propagation ($attempt)"
             sleep 10
           done
-          echo "::error::tree-sitter-cangjie==$V did not appear on PyPI"
+          echo "::error::tree-sitter-cangjie==$PYTHON_VERSION did not appear on PyPI"
           exit 1

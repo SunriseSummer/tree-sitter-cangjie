@@ -52,6 +52,16 @@ assert.match(
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/,
   `invalid npm SemVer: ${version}`
 );
+assert.match(
+  pythonVersion,
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-post(0|[1-9]\d*))?$/,
+  `unsupported Python release version: ${pythonVersion}`
+);
+assert.equal(
+  pythonVersion,
+  version,
+  "Node and Python source versions must match"
+);
 
 assert.equal(rootPackage.name, "tree-sitter-cangjie-repository");
 assert.equal(rootPackage.private, true);
@@ -89,7 +99,6 @@ assert.equal(nodeLock.name, nodePackage.name);
 assert.equal(nodeLock.version, version);
 assert.equal(nodeLock.packages?.[""]?.version, version);
 assert.equal(treeSitter.metadata.version, version);
-assert.equal(pythonVersion, version);
 assert.equal(nodePackage.repository?.url, repository);
 assert.equal(nodePackage.repository?.directory, "bindings/node");
 assert.deepEqual(nodePackage.publishConfig, {
@@ -287,29 +296,60 @@ assert.ok(
 );
 for (const requiredReleaseFragment of [
   "group: release-${{ github.repository }}-${{ github.ref }}",
-  "npm_only:",
-  "default: false",
-  "retry_version:",
-  "retry_version is required when npm_only is enabled",
-  "RETRY_VERSION: ${{ inputs.retry_version }}",
-  "needs.release.result == 'success' || inputs.npm_only",
+  "operation:",
+  "- onepass",
+  "- release",
+  "- publish",
+  "- publish_npm",
+  "- publish_pypi",
+  "default: onepass",
+  "release_version:",
+  "required: true",
+  "release_version is required for every operation",
+  "release_version must match committed package versions",
+  "REQUESTED_RELEASE_VERSION: ${{ inputs.release_version }}",
+  "Node and Python source versions must match",
+  "preflight:",
+  "needs.preflight.outputs.node_version",
+  "needs.preflight.outputs.python_artifact_version",
+  "needs.preflight.outputs.release_version",
   "npm-publish:",
   "pypi-publish:",
-  "name: npm-package",
-  "needs: release",
-  'gh release download "v$V"',
-  '--pattern "tree-sitter-cangjie-$V.tgz"',
-  'TARBALL="$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$V.tgz"',
-  'test -f "$TARBALL"',
+  "- release",
+  'gh release download "v$RELEASE_VERSION"',
+  '--pattern "tree-sitter-cangjie-$RELEASE_VERSION.tgz"',
+  '--pattern "tree_sitter_cangjie-$PYTHON_VERSION-*.whl"',
+  '--pattern "tree_sitter_cangjie-$PYTHON_VERSION.tar.gz"',
+  "sha256sum --check --ignore-missing SHA256SUMS",
+  'TARBALL="$GITHUB_WORKSPACE/release/tree-sitter-cangjie-$RELEASE_VERSION.tgz"',
   'npm publish "$TARBALL"',
   "pypa/gh-action-pypi-publish@release/v1",
   "packages-dir: dist/",
   "skip-existing: true",
-  "https://pypi.org/pypi/tree-sitter-cangjie/$V/json",
+  "https://pypi.org/pypi/tree-sitter-cangjie/$PYTHON_VERSION/json",
 ]) {
   assert.ok(
     releaseWorkflow.includes(requiredReleaseFragment),
     `release workflow is missing ${requiredReleaseFragment}`
+  );
+}
+assert.equal(
+  releaseWorkflow.includes("npm_only:"),
+  false,
+  "release workflow must use the operation choice instead of npm_only"
+);
+for (const removedMode of [
+  "release-all",
+  "release-npm",
+  "release-pypi",
+  "retry-npm-publish",
+  "retry-pypi-publish",
+  "retry_version:",
+]) {
+  assert.equal(
+    releaseWorkflow.includes(removedMode),
+    false,
+    `release workflow still contains obsolete mode ${removedMode}`
   );
 }
 assert.equal(
@@ -328,4 +368,11 @@ assert.equal(
   "PyPI publisher was configured without a GitHub Environment"
 );
 
-console.log(`release metadata validated: tree-sitter-cangjie@${version}`);
+const pythonArtifactVersion = pythonVersion.replace(
+  /[-_.]post[-_.]?(\d+)$/i,
+  (_, number) => `.post${Number(number)}`
+);
+console.log(
+  `release metadata validated: source ${version}, ` +
+    `Python artifacts ${pythonArtifactVersion}`
+);

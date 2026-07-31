@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-cangjie-repository",
-  "version": "1.0.5",
+  "version": "1.0.5-post1",
   "private": true,
   "description": "Repository orchestration and integration tests for tree-sitter-cangjie",
   "license": "MulanPSL-2.0",

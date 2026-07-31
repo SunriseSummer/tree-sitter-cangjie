@@ -140,10 +140,23 @@ npm run test:python
 `.github/workflows/ci.yml` 会验证 parser 生成结果和 corpus、WASM、六个平台目标的
 Node 原生插件，以及六个平台目标的 Python wheel。
 
-`.github/workflows/release.yml` 由 `cangjie-1.0.5` 分支手动触发。它不会回写或推送
-源码；会构建并测试全部产物、组装自包含 npm tarball、创建 GitHub Release、
-生成校验和与构建来源证明。GitHub Release 创建成功后，npm tarball 与 Python
-wheel/sdist 会分别通过独立的最小权限 job 并行发布到 npm 和 PyPI。
+`.github/workflows/release.yml` 由 `cangjie-1.0.5` 分支手动触发，不会回写或推送
+源码。触发时通过 `operation` 选择操作：
+
+- `onepass`：全量构建测试，创建完整 GitHub Release，然后发布 npm 和 PyPI。
+- `release`：全量构建测试并创建完整 GitHub Release，不发布中心仓。
+- `publish`：从已有 GitHub Release 下载并校验产物，发布 npm 和 PyPI。
+- `publish_npm`：从已有 GitHub Release 只发布 npm。
+- `publish_pypi`：从已有 GitHub Release 只发布 PyPI。
+
+所有操作都必须人工填写 `release_version`（不带 `v`）。`onepass` 和 `release`
+会校验该值与仓库中的 Node、Python 统一版本完全一致；三个 `publish*` 操作使用
+它定位已有 GitHub Release，且不重新构建或测试。中心仓发布始终消费 GitHub
+Release 中的原始产物并验证 `SHA256SUMS`，不会重新组装发布包。
+
+Python 会按照 PEP 440 规范化发行版本。例如，仓库统一版本 `1.0.5-post1`
+对应 GitHub/npm 产物版本 `1.0.5-post1`，Python wheel、sdist 和 PyPI 版本
+则规范化显示为 `1.0.5.post1`。
 
 npm 发布使用 Trusted Publisher 和 GitHub Actions OIDC，不使用长期 npm Token。
 Trusted Publisher 配置如下：

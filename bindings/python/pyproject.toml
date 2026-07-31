@@ -5,7 +5,7 @@ backend-path = ["."]
 
 [project]
 name = "tree-sitter-cangjie"
-version = "1.0.5"
+version = "1.0.5-post1"
 description = "Cangjie grammar for tree-sitter"
 readme = "README.md"
 requires-python = ">=3.10"
