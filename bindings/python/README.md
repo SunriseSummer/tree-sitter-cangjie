@@ -1,7 +1,7 @@
 # tree-sitter-cangjie
 
 Python bindings for the [Tree-sitter](https://tree-sitter.github.io/tree-sitter/)
-Cangjie grammar. The package provides a native Cangjie parser plus the
+[Cangjie](https://cangjie-lang.cn/) grammar. The package provides a native Cangjie parser plus the
 highlights, indents, locals, tags, and textobjects queries maintained by the
 `tree-sitter-cangjie` project.
 
@@ -92,9 +92,3 @@ tree.edit(
 new_tree = parser.parse(new_source, tree)
 changed_ranges = tree.changed_ranges(new_tree)
 ```
-
-## Project links
-
-- [Source repository](https://github.com/SunriseSummer/tree-sitter-cangjie)
-- [Issue tracker](https://github.com/SunriseSummer/tree-sitter-cangjie/issues)
-- License: MulanPSL-2.0

@@ -1,30 +1,26 @@
 # Tree-Sitter-Cangjie
 
-`tree-sitter-cangjie` 是面向仓颉 1.0.5 的 Tree-sitter 语法解析器。
+`tree-sitter-cangjie` 是适配[仓颉编程语言](https://cangjie-lang.cn/)（Cangjie 1.0.5）的 Tree-sitter 语法解析器。
 仓库维护并发布三类产物：
 
 - Node.js 原生插件：发布到 npm 和 GitHub Releases。
 - Python 原生插件：发布到 PyPI 和 GitHub Releases。
-- WebAssembly 语法模块：包含在 npm 包中，同时发布到 GitHub Releases。
-
-C、Go、Rust、Swift 等其他绑定不属于本仓库的维护范围。需要这些绑定的项目可以基于
-`parser/src/parser.c`、`parser/src/scanner.c` 和 `parser/src/tree_sitter/`
-自行集成。
+- WebAssembly 模块：包含在 npm 包中，同时发布到 GitHub Releases。
 
 ## 工程结构
 
 ```text
 tree-sitter-cangjie/
-├── package.json                 # 私有根工程：统一构建、测试和发布校验入口
+├── package.json                 # 根工程：统一构建、测试和发布校验入口
 ├── scripts/                     # 仓库级 WASM、快照和发布脚本
 ├── tests/
-│   ├── node/                    # 跨 parser/binding 的 Node.js 集成测试
-│   ├── python/                  # 与 Node.js 对称的 Python 端到端测试
-│   └── fixtures/                # 实战仓颉项目、AST 快照和 query 测试数据
-├── parser/                      # 私有语法开发工程
+│   ├── node/                    # 基于 parser/binding/node 的端到端测试
+│   ├── python/                  # 与 node 对称的 python 端到端测试
+│   └── fixtures/                # 各类仓颉项目、AST 快照和 query 测试数据
+├── parser/                      # 仓颉语法及解析器
 │   ├── grammar/                 # 仓颉语法定义
-│   ├── queries/                 # highlights、indents、locals、tags、textobjects
-│   ├── src/                     # 生成的 C 解析器和节点元数据
+│   ├── src/                     # 基于 grammar 描述生成的 C 解析器和节点元数据
+│   ├── queries/                 # 各类查询定义：highlights/indents/locals/tags/textobjects
 │   ├── test/corpus/             # tree-sitter CLI 标准 corpus
 │   ├── package.json
 │   └── tree-sitter.json
@@ -34,8 +30,8 @@ tree-sitter-cangjie/
 └── .github/workflows/           # CI 与手动发布流水线
 ```
 
-根工程只负责调度和集成测试，设置了 `private: true`，不会发布到 npm。
-`parser`、`bindings/node` 各自拥有独立的 `package-lock.json`，仓库不使用
+根工程只负责调度和集成测试，设置了 `private: true`，不会发布到 npm 中心仓。
+`parser`、`bindings/node` 各自拥有独立的 `package.json`，仓库不使用
 npm workspaces，避免发布包的依赖和根工程工具依赖互相污染。
 
 Node 发布工程会在构建和打包时，把 `parser` 中的语法定义、C 源码、queries、
@@ -65,11 +61,8 @@ npm 包提供 Linux、Windows、macOS 的 x64 和 ARM64 预构建插件。其他
 
 ### Python
 
-Python wheel 和 sdist 同时发布到 PyPI 与 GitHub Releases。推荐直接从 PyPI
-安装解析器及其 Python Tree-sitter 运行时：
-
 ```shell
-pip install "tree-sitter-cangjie[core]==1.0.5"
+pip install tree-sitter tree-sitter-cangjie
 ```
 
 ```python
@@ -82,6 +75,7 @@ tree = parser.parse(b'main() { println("Hello, Cangjie!") }\n')
 print(tree.root_node)
 ```
 
+Python wheel 和 sdist 同时发布到 PyPI 与 GitHub Releases。
 wheel 使用 CPython 3.11 构建，并限制为 CPython 3.10 stable ABI，因此文件标记为
 `cp310-abi3`，支持标准 GIL 构建的 CPython 3.10 及以上版本。
 
@@ -99,9 +93,9 @@ parser.setLanguage(language);
 const tree = parser.parse("main() {}\n");
 ```
 
-## 本地开发
+## tree-sitter-cangjie 项目开发
 
-推荐使用 Node.js 24 和 npm 11。在仓库根目录安装三个独立 Node 工程：
+推荐使用 Node.js 24 和 npm 11，在仓库根目录安装三个独立 Node 工程：
 
 ```shell
 npm ci
@@ -124,6 +118,8 @@ npm run verify:release    # 校验版本、目录边界和发布元数据
 `npm run generate` 必须在提交内容完整时保持工作树无差异。WASM 构建还要求
 Clang 带 WebAssembly 后端，并且系统中可用 `wasm-ld`。
 
+Python 包的构建和测试是比较独立的，且测试前需要在环境中安装构建出的插件。
+
 构建 Python 分发包：
 
 ```shell
@@ -131,7 +127,7 @@ python -m pip install build
 npm run build:python
 ```
 
-安装生成的 wheel 后运行：
+安装生成的 wheel 后，执行测试：
 
 ```shell
 npm run test:python
@@ -158,8 +154,6 @@ Trusted Publisher 配置如下：
 - Environment：留空
 - Allowed action：`npm publish`
 
-仓库不需要也不应保留 `NPM_TOKEN_BOOTSTRAP` 等 npm 发布 Secret。
-
 PyPI 发布同样使用 Trusted Publisher 和 GitHub Actions OIDC，不需要密码、
 API Token 或 GitHub Environment：
 
@@ -169,11 +163,6 @@ API Token 或 GitHub Environment：
 - Repository：`tree-sitter-cangjie`
 - Workflow：`release.yml`
 - Environment：留空
-
-如果完整发布中只有 npm job 失败，不要移动已有版本标签，也不要重新构建已经发布
-到 PyPI 的文件。重新运行 `release.yml`，启用 `npm_only` 并在 `retry_version`
-填写已有版本号；工作流会从对应 GitHub Release 下载原始 npm tarball，只执行 npm
-发布及 Registry 校验。正常完整发布应保持 `npm_only` 关闭，`retry_version` 留空。
 
 ## 许可证
 
