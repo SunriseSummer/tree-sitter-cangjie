@@ -35,4 +35,4 @@ core = ["tree-sitter~=0.25"]
 build = "cp311-*"
 build-frontend = "build"
 test-requires = ["pytest", "tree-sitter~=0.25"]
-test-command = "pytest {package}/tests"
+test-command = "python -m pytest {project}/tests/python"

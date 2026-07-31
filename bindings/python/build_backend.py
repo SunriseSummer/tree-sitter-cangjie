@@ -16,7 +16,6 @@ def _stage_repository_sources() -> None:
     parser_dir = REPOSITORY_ROOT / "parser"
     source_dir = parser_dir / "src"
     queries_dir = parser_dir / "queries"
-    query_testcase_dir = REPOSITORY_ROOT / "tests" / "fixtures" / "queries"
     license_file = REPOSITORY_ROOT / "LICENSE"
 
     if not source_dir.is_dir():
@@ -41,10 +40,6 @@ def _stage_repository_sources() -> None:
         queries_dir,
         VENDOR_ROOT / "queries",
         ignore=shutil.ignore_patterns("tests"),
-    )
-    shutil.copytree(
-        query_testcase_dir,
-        VENDOR_ROOT / "tests" / "queries",
     )
     shutil.copy2(license_file, VENDOR_ROOT / "LICENSE")
     atexit.register(shutil.rmtree, VENDOR_ROOT, ignore_errors=True)

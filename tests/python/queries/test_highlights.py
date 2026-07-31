@@ -12,7 +12,7 @@ Test: highlights.scm — 语法高亮查询验证
 
 Usage:
     cd tree-sitter-cangjie
-    python -m pytest bindings/python/tests/queries/test_highlights.py
+    python -m pytest tests/python/queries/test_highlights.py
 """
 
 import os

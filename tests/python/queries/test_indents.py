@@ -12,7 +12,7 @@ Test: indents.scm — 缩进规则查询验证
 
 Usage:
     cd tree-sitter-cangjie
-    python -m pytest bindings/python/tests/queries/test_indents.py
+    python -m pytest tests/python/queries/test_indents.py
 """
 
 import os

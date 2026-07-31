@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Verify tags.scm against the shared Cangjie query fixture."""
 
 import os
 import sys

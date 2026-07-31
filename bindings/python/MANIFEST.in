@@ -3,5 +3,4 @@ include pyproject.toml
 include README.md
 include setup.py
 recursive-include tree_sitter_cangjie *.c *.py *.pyi py.typed
-recursive-include tests *.py
 recursive-include vendor *

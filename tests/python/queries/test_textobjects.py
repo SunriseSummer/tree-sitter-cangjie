@@ -12,7 +12,7 @@ Test: textobjects.scm — 文本对象查询验证
 
 Usage:
     cd tree-sitter-cangjie
-    python -m pytest bindings/python/tests/queries/test_textobjects.py
+    python -m pytest tests/python/queries/test_textobjects.py
 """
 
 import os

@@ -22,6 +22,18 @@ const pyproject = fs.readFileSync(
   resolvePath("bindings/python/pyproject.toml"),
   "utf8"
 );
+const pythonManifest = fs.readFileSync(
+  resolvePath("bindings/python/MANIFEST.in"),
+  "utf8"
+);
+const pythonBuildBackend = fs.readFileSync(
+  resolvePath("bindings/python/build_backend.py"),
+  "utf8"
+);
+const pythonReadme = fs.readFileSync(
+  resolvePath("bindings/python/README.md"),
+  "utf8"
+);
 const changelog = fs.readFileSync(resolvePath("CHANGELOG.md"), "utf8");
 const releaseWorkflow = fs.readFileSync(
   resolvePath(".github/workflows/release.yml"),
@@ -115,6 +127,7 @@ for (const obsoleteDirectory of [
   "parser/scripts",
   "parser/queries/tests",
   "bindings/node/tests",
+  "bindings/python/tests",
 ]) {
   assert.equal(
     containsFiles(resolvePath(obsoleteDirectory)),
@@ -147,6 +160,14 @@ for (const requiredFile of [
   "tests/node/parser.test.js",
   "tests/node/corpus.test.js",
   "tests/node/queries/run_all.js",
+  "tests/python/test_parser.py",
+  "tests/python/test_corpus.py",
+  "tests/python/queries/test_compilation.py",
+  "tests/python/queries/test_highlights.py",
+  "tests/python/queries/test_indents.py",
+  "tests/python/queries/test_locals.py",
+  "tests/python/queries/test_tags.py",
+  "tests/python/queries/test_textobjects.py",
   "tests/fixtures/projects/test_bugfix_regressions.cj",
   "tests/fixtures/queries/test_highlights.cj",
   "parser/package.json",
@@ -163,6 +184,7 @@ for (const requiredFile of [
   "bindings/node/src/binding.cc",
   "bindings/node/scripts/stage-parser.mjs",
   "bindings/python/pyproject.toml",
+  "bindings/python/README.md",
   "bindings/python/setup.py",
   "bindings/python/MANIFEST.in",
   "bindings/python/build_backend.py",
@@ -189,6 +211,62 @@ assert.equal(
   containsFiles(resolvePath("bindings/python/vendor")),
   false,
   "bindings/python/vendor must be generated only while building"
+);
+assert.equal(rootPackage.scripts["test:python"], "python -m pytest tests/python");
+assert.ok(
+  pyproject.includes(
+    'test-command = "python -m pytest {project}/tests/python"'
+  ),
+  "cibuildwheel must test the installed wheel with root Python tests"
+);
+assert.equal(
+  pythonManifest.includes("recursive-include tests"),
+  false,
+  "Python distributions must not embed repository tests"
+);
+assert.equal(
+  pythonBuildBackend.includes("vendor/tests"),
+  false,
+  "Python builds must not stage repository test fixtures"
+);
+assert.ok(
+  pythonReadme.includes("## Parse Cangjie source"),
+  "PyPI README must document Python parsing"
+);
+assert.ok(
+  pythonReadme.includes("## Run syntax queries"),
+  "PyPI README must document Tree-sitter queries"
+);
+assert.equal(
+  pythonReadme.includes("local PEP 517 backend"),
+  false,
+  "PyPI README must not expose repository build internals"
+);
+
+const queryTestBasenames = (directory, extension) =>
+  fs
+    .readdirSync(resolvePath(directory), { withFileTypes: true })
+    .filter(
+      (entry) =>
+        entry.isFile() &&
+        entry.name.startsWith("test_") &&
+        entry.name.endsWith(extension)
+    )
+    .map((entry) => entry.name.slice(0, -extension.length))
+    .sort();
+assert.deepEqual(
+  queryTestBasenames("tests/python/queries", ".py"),
+  queryTestBasenames("tests/node/queries", ".js"),
+  "Node and Python query suites must stay structurally symmetric"
+);
+assert.equal(
+  releaseWorkflow.includes("bindings/python/tests"),
+  false,
+  "release workflow must not use the removed binding-local tests"
+);
+assert.ok(
+  releaseWorkflow.includes('"$GITHUB_WORKSPACE/tests/python"'),
+  "source distributions must be tested with root Python tests"
 );
 
 for (const architecture of [

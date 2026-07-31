@@ -26,6 +26,28 @@ const TESTCASE_DIR = path.resolve(
   "fixtures",
   "projects"
 );
+const REPOSITORY_QUERIES_DIR = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "parser",
+  "queries"
+);
+const PACKAGED_QUERIES_DIR = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "bindings",
+  "node",
+  "queries"
+);
+const QUERY_NAMES = [
+  "highlights.scm",
+  "indents.scm",
+  "locals.scm",
+  "tags.scm",
+  "textobjects.scm",
+];
 
 // ============================================================================
 // Helper functions
@@ -47,6 +69,20 @@ function findCjFiles(dir) {
     }
   }
   return results.sort();
+}
+
+/** Return all nodes of a given type in source order. */
+function nodesOfType(root, type) {
+  const matches = [];
+  const stack = [root];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node.type === type) matches.push(node);
+    for (let i = node.childCount - 1; i >= 0; i--) {
+      stack.push(node.child(i));
+    }
+  }
+  return matches;
 }
 
 /**
@@ -129,22 +165,30 @@ describe("Parser setup", () => {
   });
 });
 
+describe("Packaged Node binding assets", () => {
+  test("contains generated node type metadata", () => {
+    assert.ok(Array.isArray(Cangjie.nodeTypeInfo));
+    assert.ok(Cangjie.nodeTypeInfo.length > 0);
+  });
+
+  test("contains all repository queries without stale copies", () => {
+    for (const queryName of QUERY_NAMES) {
+      const packaged = fs.readFileSync(
+        path.join(PACKAGED_QUERIES_DIR, queryName),
+        "utf-8"
+      );
+      const repository = fs.readFileSync(
+        path.join(REPOSITORY_QUERIES_DIR, queryName),
+        "utf-8"
+      );
+      assert.strictEqual(packaged, repository, `packaged ${queryName} is stale`);
+    }
+  });
+});
+
 describe("Semantic node regressions", () => {
   const parser = new Parser();
   parser.setLanguage(Cangjie);
-
-  function nodesOfType(root, type) {
-    const matches = [];
-    const stack = [root];
-    while (stack.length > 0) {
-      const node = stack.pop();
-      if (node.type === type) matches.push(node);
-      for (let i = node.childCount - 1; i >= 0; i--) {
-        stack.push(node.child(i));
-      }
-    }
-    return matches;
-  }
 
   test("true and false are booleanLiteral nodes", () => {
     const tree = parser.parse("main() { let yes = true; let no = false }\n");
@@ -175,6 +219,36 @@ describe("Semantic node regressions", () => {
       constructors[2].childForFieldName("payload").text,
       "(Int64, String)"
     );
+  });
+});
+
+describe("Incremental parsing", () => {
+  test("reuses an edited tree and reports the changed range", () => {
+    const parser = new Parser();
+    parser.setLanguage(Cangjie);
+    const oldSource = "main() { let value = 1 }\n";
+    const newSource = "main() { let value = true }\n";
+    const tree = parser.parse(oldSource);
+    const start = oldSource.indexOf("1");
+
+    tree.edit({
+      startIndex: start,
+      oldEndIndex: start + 1,
+      newEndIndex: start + 4,
+      startPosition: { row: 0, column: start },
+      oldEndPosition: { row: 0, column: start + 1 },
+      newEndPosition: { row: 0, column: start + 4 },
+    });
+    const newTree = parser.parse(newSource, tree);
+
+    assertCompleteTree(newTree.rootNode, "incremental edit");
+    assert.deepStrictEqual(
+      nodesOfType(newTree.rootNode, "booleanLiteral").map(
+        (node) => node.text
+      ),
+      ["true"]
+    );
+    assert.ok(tree.getChangedRanges(newTree).length > 0);
   });
 });
 

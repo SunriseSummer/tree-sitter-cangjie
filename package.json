@@ -15,7 +15,7 @@
     "test:parser": "npm --prefix parser test",
     "test:node": "node --test --test-concurrency=1 tests/node/parser.test.js tests/node/corpus.test.js tests/node/queries/run_all.js",
     "test:wasm": "node scripts/test-wasm.mjs parser/tree-sitter-cangjie.wasm",
-    "test:python": "python -m pytest bindings/python/tests",
+    "test:python": "python -m pytest tests/python",
     "snapshots:update": "node scripts/generate-ast-snapshots.cjs",
     "corpus:update": "node scripts/update-corpus.cjs",
     "verify:release": "node scripts/validate-release.mjs",

@@ -9,7 +9,7 @@ Test: locals.scm — 作用域/定义/引用查询验证
 
 Usage:
     cd tree-sitter-cangjie
-    python -m pytest bindings/python/tests/queries/test_locals.py
+    python -m pytest tests/python/queries/test_locals.py
 """
 
 import os

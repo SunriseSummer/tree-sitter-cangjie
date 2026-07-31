@@ -6,7 +6,7 @@ Test: SCM 查询编译验证
 
 Usage:
     cd tree-sitter-cangjie
-    python -m pytest bindings/python/tests/queries/test_compilation.py
+    python -m pytest tests/python/queries/test_compilation.py
 """
 
 import os

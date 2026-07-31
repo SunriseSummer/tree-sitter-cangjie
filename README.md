@@ -19,6 +19,7 @@ tree-sitter-cangjie/
 ├── scripts/                     # 仓库级 WASM、快照和发布脚本
 ├── tests/
 │   ├── node/                    # 跨 parser/binding 的 Node.js 集成测试
+│   ├── python/                  # 与 Node.js 对称的 Python 端到端测试
 │   └── fixtures/                # 实战仓颉项目、AST 快照和 query 测试数据
 ├── parser/                      # 私有语法开发工程
 │   ├── grammar/                 # 仓颉语法定义
@@ -114,6 +115,7 @@ npm run generate          # 重新生成 parser/src
 npm run build             # 生成 parser，并构建 Node 与 WASM
 npm test                  # parser corpus、Node binding、集成测试、WASM
 npm run test:node         # 实战项目 AST、corpus 镜像和 queries
+npm run test:python       # 通过 Python binding 运行同一组 fixtures、corpus 和 queries
 npm run snapshots:update  # 更新实战项目 AST 快照
 npm run corpus:update     # 根据标准 corpus 更新测试基线
 npm run verify:release    # 校验版本、目录边界和发布元数据

@@ -128,19 +128,8 @@ jobs:
           python -m venv "$RUNNER_TEMP/sdist-test"
           "$RUNNER_TEMP/sdist-test/bin/python" -m pip install \
             pytest "tree-sitter~=0.25" dist/tree_sitter_cangjie-*.tar.gz
-          mkdir -p "$RUNNER_TEMP/sdist-source"
-          tar -xzf dist/tree_sitter_cangjie-*.tar.gz \
-            -C "$RUNNER_TEMP/sdist-source"
           "$RUNNER_TEMP/sdist-test/bin/python" -m pytest \
-            "$RUNNER_TEMP/sdist-source"/tree_sitter_cangjie-*/tests
-          "$RUNNER_TEMP/sdist-test/bin/python" - <<'PY'
-          from tree_sitter import Language, Parser
-          import tree_sitter_cangjie
-
-          language = Language(tree_sitter_cangjie.language())
-          tree = Parser(language).parse(b"package release_test\nmain() {}\n")
-          assert not tree.root_node.has_error, tree.root_node
-          PY
+            "$GITHUB_WORKSPACE/tests/python"
       - uses: actions/upload-artifact@v7
         with:
           name: python-sdist

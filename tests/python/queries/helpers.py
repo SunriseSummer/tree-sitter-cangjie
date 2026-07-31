@@ -6,38 +6,14 @@ Provides helper functions for loading queries, parsing files,
 and running query captures.
 """
 
-import os
+from pathlib import Path
 
 import tree_sitter_cangjie
 from tree_sitter import Language, Parser, Query, QueryCursor
 
-_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-PACKAGE_ROOT = os.path.normpath(
-    os.path.join(
-        _THIS_DIR,
-        os.pardir,
-        os.pardir,
-    )
-)
-REPOSITORY_ROOT = os.path.normpath(
-    os.path.join(
-        PACKAGE_ROOT,
-        os.pardir,
-        os.pardir,
-    )
-)
-REPOSITORY_QUERIES_DIR = os.path.join(REPOSITORY_ROOT, "parser", "queries")
-REPOSITORY_TESTCASE_DIR = os.path.join(
-    REPOSITORY_ROOT, "tests", "fixtures", "queries"
-)
-if os.path.isdir(REPOSITORY_QUERIES_DIR) and os.path.isdir(
-    REPOSITORY_TESTCASE_DIR
-):
-    QUERIES_DIR = REPOSITORY_QUERIES_DIR
-    TESTCASE_DIR = REPOSITORY_TESTCASE_DIR
-else:
-    QUERIES_DIR = os.path.join(PACKAGE_ROOT, "vendor", "queries")
-    TESTCASE_DIR = os.path.join(PACKAGE_ROOT, "vendor", "tests", "queries")
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+QUERIES_DIR = REPOSITORY_ROOT / "parser" / "queries"
+TESTCASE_DIR = REPOSITORY_ROOT / "tests" / "fixtures" / "queries"
 
 
 def get_parser_and_language():
@@ -49,22 +25,19 @@ def get_parser_and_language():
 
 def load_query(lang, scm_filename):
     """Load a .scm query file and compile it."""
-    scm_path = os.path.join(QUERIES_DIR, scm_filename)
-    with open(scm_path, "r", encoding="utf-8") as f:
-        query_text = f.read()
+    query_text = (QUERIES_DIR / scm_filename).read_text(encoding="utf-8")
     return Query(lang, query_text)
 
 
 def parse_file(parser, filepath):
     """Parse a Cangjie source file and return the tree and source bytes."""
-    with open(filepath, "rb") as f:
-        source = f.read()
+    source = Path(filepath).read_bytes()
     return parser.parse(source), source
 
 
 def run_query_captures(lang, query, parser, cj_filename):
     """Run a query and return {capture_name: [(text, node_type, start_point, end_point), ...]}."""
-    cj_path = os.path.join(TESTCASE_DIR, cj_filename)
+    cj_path = TESTCASE_DIR / cj_filename
     tree, source = parse_file(parser, cj_path)
     if tree.root_node.has_error:
         raise AssertionError(f"{cj_filename} must parse without recovery")
@@ -83,7 +56,7 @@ def run_query_captures(lang, query, parser, cj_filename):
 
 def run_query_matches(lang, query, parser, cj_filename):
     """Run a query while preserving captures belonging to each match."""
-    cj_path = os.path.join(TESTCASE_DIR, cj_filename)
+    cj_path = TESTCASE_DIR / cj_filename
     tree, source = parse_file(parser, cj_path)
     if tree.root_node.has_error:
         raise AssertionError(f"{cj_filename} must parse without recovery")
