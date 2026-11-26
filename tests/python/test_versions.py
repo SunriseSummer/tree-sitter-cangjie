@@ -6,9 +6,9 @@ from tree_sitter import Language, Parser
 import tree_sitter_cangjie
 
 ROOT = Path(__file__).resolve().parents[2]
-METADATA = json.loads((ROOT / 'language-version.json').read_text())
+METADATA = json.loads((ROOT / 'language-version.json').read_text(encoding="utf-8"))
 CASES = [case for file in METADATA['fixtures'] for case in
-         json.loads((ROOT / 'tests/fixtures/versions' / file).read_text())]
+         json.loads((ROOT / 'tests/fixtures/versions' / file).read_text(encoding="utf-8"))]
 LANGUAGE = Language(tree_sitter_cangjie.language())
 
 

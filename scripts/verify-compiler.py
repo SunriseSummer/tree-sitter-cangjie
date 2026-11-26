@@ -25,7 +25,7 @@ def main():
     args = ap.parse_args()
     sdk = args.sdk.resolve()
     stdx = args.stdx.resolve()
-    metadata = json.loads((ROOT / 'language-version.json').read_text())
+    metadata = json.loads((ROOT / 'language-version.json').read_text(encoding="utf-8"))
     compiler = sdk / 'bin/cjc'
     version = subprocess.check_output([str(compiler), '--version'], text=True)
     if f"{metadata['sdkVersion']} (" not in version:
@@ -42,13 +42,13 @@ def main():
         sdk / 'lib/linux_x86_64_cjnative', *libraries,
     ])) + os.pathsep + env.get('LD_LIBRARY_PATH', '')
     cases = [c for f in metadata['fixtures'] for c in
-             json.loads((ROOT / 'tests/fixtures/versions' / f).read_text()) if c.get('compile')]
+             json.loads((ROOT / 'tests/fixtures/versions' / f).read_text(encoding="utf-8")) if c.get('compile')]
 
     def check(case):
         with tempfile.TemporaryDirectory(prefix='cangjie-fixture-') as directory:
             work = Path(directory)
             source = work / 'fixture.cj'
-            source.write_text(case['source'])
+            source.write_text(case['source'], encoding='utf-8')
             flags = case.get('compilerFlags', [])
             has_main = bool(re.search(r'\bmain\s*\(', case['source']))
             cmd = [str(compiler), str(source), *flags, '--import-path', str(module)]
@@ -82,7 +82,7 @@ def main():
               'cases': records}
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
-        args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+        args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     failures = [r for r in records if any(v is False for v in r.values())]
     for record in failures:
         print(json.dumps(record, ensure_ascii=False, indent=2))
