@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-cangjie-parser",
-  "version": "1.2.1",
+  "version": "1.3.0-alpha.20261126001016",
   "private": true,
   "description": "Grammar development project for tree-sitter-cangjie",
   "license": "MulanPSL-2.0",

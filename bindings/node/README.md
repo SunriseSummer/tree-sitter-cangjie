@@ -3,7 +3,7 @@
 Node.js binding for the Cangjie Tree-sitter grammar.
 
 ```shell
-npm install tree-sitter tree-sitter-cangjie
+npm install tree-sitter tree-sitter-cangjie@1.3.0-alpha.20261126001016
 ```
 
 ```javascript
@@ -23,5 +23,8 @@ queries, and `tree-sitter-cangjie.wasm`.
 Grammar development sources are maintained in the repository's `parser`
 project and are staged into this self-contained package before publication.
 
-This branch targets Cangjie 1.2.1. Install `tree-sitter-cangjie@1.2.1` (npm)
-or `tree-sitter-cangjie==1.2.1` (PyPI) for a reproducible language baseline.
+This branch targets the experimental Cangjie `1.3.0-alpha.20261126001016` nightly.
+Install `tree-sitter-cangjie@1.3.0-alpha.20261126001016` from npm (`next` tag),
+or `tree-sitter-cangjie==1.3.0a20261126001016` from PyPI.
+This is not a final Cangjie 1.3.0 release. Local-mode compilation requires
+`--experimental --enable-local-mode`; the grammar recognizes its syntax directly.

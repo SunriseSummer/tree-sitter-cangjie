@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.0-alpha.20261126001016] - 2026-11-26
+
+- Track Cangjie nightly 1.3.0-alpha.20261126001016, compiler c7a8aac534cd;
+  this is explicitly a prerelease, published under npm tag next.
+- Parse experimental modal types (@ local!, @ local?, @ ~local), modal
+  constructor calls and nested functions, this-mode parameters, demode fields,
+  and exclave modifiers/expressions. Keep local/exclave/demode identifiers
+  usable in ordinary code and preserve all 1.0.x and 1.2.1 fixture ASTs.
+- Distinguish a function return's mode from the mode of a grouped function type.
+- Add official-SDK executable regressions for Option trailing lambdas,
+  primitive aliases, sealed exhaustive matches, Extern generic signatures,
+  structured concurrency, and the documented local-mode constructs.
+- Correct UTF-8 fixture handling on Windows in both language branches.
+
 ## [1.2.1] - 2026-11-26
 
 - Adapt to the official Cangjie 1.2.1 SDK: organization-qualified packages and

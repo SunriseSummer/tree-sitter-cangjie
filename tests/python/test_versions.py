@@ -6,9 +6,9 @@ from tree_sitter import Language, Parser
 import tree_sitter_cangjie
 
 ROOT = Path(__file__).resolve().parents[2]
-METADATA = json.loads((ROOT / 'language-version.json').read_text())
+METADATA = json.loads((ROOT / 'language-version.json').read_text(encoding="utf-8"))
 CASES = [case for file in METADATA['fixtures'] for case in
-         json.loads((ROOT / 'tests/fixtures/versions' / file).read_text())]
+         json.loads((ROOT / 'tests/fixtures/versions' / file).read_text(encoding="utf-8"))]
 LANGUAGE = Language(tree_sitter_cangjie.language())
 
 
@@ -54,3 +54,15 @@ def test_error_recovery():
     tree = Parser(LANGUAGE).parse(b'func broken(x: ) {}\nfunc recovered(): Int64 {42}\n')
     assert tree.root_node.has_error
     assert any(n.type == 'funcName' and n.text == b'recovered' for n in nodes(tree.root_node))
+
+
+@pytest.mark.skipif(METADATA['languageVersion'] != '1.3.0', reason='modal types require 1.3')
+def test_modal_function_binding():
+    returning = Parser(LANGUAGE).parse(b'func use(f: () -> String @ local?) {}')
+    returning_type = next(n for n in nodes(returning.root_node) if n.type == 'parameter').child_by_field_name('type')
+    assert returning_type.type == 'arrowType'
+    assert returning_type.named_children[-1].type == 'modalType'
+    grouped = Parser(LANGUAGE).parse(b'func use(f: (() -> String) @ local?) {}')
+    object_type = next(n for n in nodes(grouped.root_node) if n.type == 'parameter').child_by_field_name('type')
+    assert object_type.type == 'modalType'
+    assert object_type.child_by_field_name('type').type == 'tupleType'

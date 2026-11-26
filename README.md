@@ -1,6 +1,6 @@
 # Tree-Sitter-Cangjie
 
-`tree-sitter-cangjie` 是适配[仓颉编程语言](https://cangjie-lang.cn/)（Cangjie 1.2.1）的 Tree-sitter 语法解析器。
+`tree-sitter-cangjie` 是适配[仓颉编程语言](https://cangjie-lang.cn/)（Cangjie 1.3.0 nightly）的 Tree-sitter 语法解析器。
 仓库维护并发布三类产物：
 
 - Node.js 原生插件：发布到 npm 和 GitHub Releases。
@@ -15,14 +15,22 @@
 | `cangjie-1.2.1` | `1.2.1` | 官方 1.2.1 STS SDK |
 | `cangjie-1.3.0` | alpha 预发布 | 固定 1.3 nightly，详见该分支 |
 
-本分支增加组织名路径、`common/specific`、common enum 的 `...`、`features`、
-`@!` 注解和实验性效应处理器。保留 1.0.x 测试语料的既有 AST 形状。
-Tree-sitter 接受编译器普通/实验模式的语法并集，不执行名称解析、类型检查、
-平台链接或静态初始化规则检查；实验特性的编译开关仍由 `cjc` 决定。
+本分支基于 **1.3.0-alpha.20261126001016**（编译器提交 `c7a8aac534cd`），
+并非仓颉 1.3.0 正式版。包版本为 npm `1.3.0-alpha.20261126001016`、
+PyPI `1.3.0a20261126001016`；npm `next` 指向此预发布，`latest` 保留稳定版。
 
-安装固定版本：`npm install tree-sitter-cangjie@1.2.1` 或
-`pip install tree-sitter-cangjie==1.2.1`。
-适配依据和验证方法见 [版本适配说明](docs/version-support.md)。
+在 1.2.1 语法上增加实验性模态类型 `@ local! / @ local? / @ ~local`、
+this 模态参数、`exclave`、`demode`，同时覆盖 Option 尾随 lambda、数值别名转换、
+sealed 穷尽匹配、Extern 泛型及 std.concurrent 场景。保留已有测试语料的 AST。
+Tree-sitter 接受普通/实验模式的语法并集，不替代 cjc 的类型、逃逸和平台检查。
+
+```sh
+npm install tree-sitter tree-sitter-cangjie@1.3.0-alpha.20261126001016
+pip install tree-sitter tree-sitter-cangjie==1.3.0a20261126001016
+```
+
+实验特性的官方编译选项为 `--experimental --enable-local-mode`。
+适配依据、具体构建和验证方法见 [版本适配说明](docs/version-support.md)。
 
 ## 工程结构
 
@@ -60,7 +68,7 @@ Node 发布工程会在构建和打包时，把 `parser` 中的语法定义、C 
 ### Node.js
 
 ```shell
-npm install tree-sitter tree-sitter-cangjie
+npm install tree-sitter tree-sitter-cangjie@1.3.0-alpha.20261126001016
 ```
 
 ```javascript
@@ -79,7 +87,7 @@ npm 包提供 Linux、Windows、macOS 的 x64 和 ARM64 预构建插件。其他
 ### Python
 
 ```shell
-pip install tree-sitter tree-sitter-cangjie
+pip install tree-sitter tree-sitter-cangjie==1.3.0a20261126001016
 ```
 
 ```python
@@ -157,7 +165,7 @@ npm run test:python
 `.github/workflows/ci.yml` 会验证 parser 生成结果和 corpus、WASM、六个平台目标的
 Node 原生插件，以及六个平台目标的 Python wheel。
 
-`.github/workflows/release.yml` 由 `cangjie-1.2.1` 分支手动触发，不会回写或推送
+`.github/workflows/release.yml` 由 `cangjie-1.3.0` 分支手动触发，不会回写或推送
 源码。触发时通过 `operation` 选择操作：
 
 - `onepass`：全量构建测试，创建完整 GitHub Release，然后发布 npm 和 PyPI。

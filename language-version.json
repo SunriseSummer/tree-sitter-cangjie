@@ -1,17 +1,22 @@
 {
-  "languageVersion": "1.2.1",
-  "channel": "stable",
-  "sdkVersion": "1.2.1",
-  "sdkUrl": "https://cangjie-lang.cn/v1/files/auth/downLoad?nsId=142267&fileName=cangjie-sdk-linux-x64-1.2.1.tar.gz&objectKey=6af2edbae4bd101f57762f7c",
-  "sdkSha256": "5616624fcb48db150df2accde6669a2c8cc5e851d79e623a5469c4e4cd7a491f",
+  "languageVersion": "1.3.0",
+  "channel": "alpha",
+  "sdkVersion": "1.3.0-alpha.20261126001016",
+  "sdkUrl": "https://gitcode.com/Cangjie/nightly_build/releases/download/1.3.0-alpha.20261126001016/cangjie-sdk-linux-x64-1.3.0-alpha.20261126001016.tar.gz",
+  "sdkSha256": "5fedf362fcfb593587655940694ff3035db73097a8b374ff0c16039f56ed94e4",
   "fixtures": [
-    "1.2.1.json"
+    "1.2.1.json",
+    "1.3.0.json"
   ],
   "references": [
+    "https://gitcode.com/Cangjie/nightly_build/releases/tag/1.3.0-alpha.20261126001016",
+    "https://gitcode.com/Cangjie/cangjie_compiler/tree/c7a8aac534cd8df8c9c0898c6cc620be4a1ef35a/src/Parse",
     "https://cj-docs.gitcode.com/zh/1.2.1/dev-guide/source_zh_cn/package/package_name.html",
     "https://cj-docs.gitcode.com/zh/1.2.1/dev-guide/source_zh_cn/multiplatform/common_platform.html",
     "https://gitcode.com/Cangjie/cangjie_compiler/tree/release/1.2/src/Parse"
   ],
-  "stdxUrl": "https://gitcode.com/Cangjie/cangjie_stdx/releases/download/v1.2.1.1/cangjie-stdx-linux-x64-1.2.1.1.zip",
-  "stdxSha256": "21464b7a53ebf22f8f6a00d6f5837a11c177f35f37cecb9b5422e49b3237c89b"
+  "stdxUrl": "https://gitcode.com/Cangjie/nightly_build/releases/download/1.3.0-alpha.20261126001016/cangjie-stdx-linux-x64-1.3.0-alpha.20261126001016.1.zip",
+  "stdxSha256": "22c0ba6fbc26f5af6f96a27918b48df2462937029de243e4b772c15f1bae58aa",
+  "compilerCommit": "c7a8aac534cd8df8c9c0898c6cc620be4a1ef35a",
+  "documentationCommit": "0985bf011f29"
 }

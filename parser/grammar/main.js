@@ -132,6 +132,8 @@ const M = {
         modifiers: _ => repeat1(choice(
             'common',
             'specific',
+            'exclave',
+            'demode',
             TOKENS.PUBLIC,
             TOKENS.PROTECTED,
             TOKENS.PRIVATE,
@@ -183,7 +185,13 @@ const M = {
         asterisk: _ => '*',
 
         //types
-        _type: $ => choice(
+        // Bare types retain their original public nodes. Modal annotations
+        // add an explicit wrapper only when present.
+        _type: $ => choice($._nonModalType, $.modalType),
+        modalType: $ => prec.right(2, seq(field('type', $._nonModalType), $.mode)),
+        mode: $ => seq('@', $.modeSpecifier),
+        modeSpecifier: _ => token(choice('~local', 'local!', 'local?')),
+        _nonModalType: $ => choice(
             $.arrowType,
             $.tupleType,
             $.prefixType,
@@ -213,10 +221,10 @@ const M = {
             $.rangeType,
         ),
 
-        arrowType: $ => seq('(', optional(commaSep1(choice(
+        arrowType: $ => prec.right(seq('(', optional(commaSep1(choice(
             seq($.identifier, ':', $._type),
             $._type,
-        ))), ')', token('->'), $._type),
+        ))), ')', token('->'), $._type)),
 
         tupleType: $ => seq('(', $._typeList, ')'),
 
@@ -328,6 +336,7 @@ const M = {
         ),
         functionDefinition: $ => seq(
             optional($.modifiers),
+            optional($.mode),
             TOKENS.FUNC,
             field('name', $._functionName),
             optional($.typeParameters),
@@ -340,6 +349,7 @@ const M = {
         parameterList: $ => seq(
             '(',
             optional(choice(
+                seq($.thisParameter, optional(seq(',', commaSep1(choice($.namedParameter, $.parameter))))),
                 seq(
                     commaSep1(choice($.namedParameter, $.parameter)),
                     optional(seq(',', '...')),
@@ -348,6 +358,7 @@ const M = {
             )),
             ')',
         ),
+        thisParameter: $ => seq('this', $.mode),
         _unnamedParameterList: $ => seq(optional(seq($._unnamedParameterList, ',')), $.parameter),
         _namedParameterList: $ => seq(optional(seq($._namedParameterList, ',')), $.namedParameter),
         parameter: $ => seq(
@@ -675,7 +686,8 @@ const M = {
             $.lambdaExpression,
             $.synchronizedExpression,       //同步表达式
             $.spawnExpression,              //生成表达式
-            $.unsafeExpression,             //不安全表达式
+            $.unsafeExpression,
+            $.exclaveExpression,             //不安全表达式
             $.thisSuperExpression,
             $.ifExpression,
             $.matchExpression,
@@ -744,6 +756,7 @@ const M = {
                 prec(PREC.PARENS, $.callSuffix),
                 prec(PREC.POSTFIX, $.incOrDec),
                 $.trailingLambdaExpression,
+                $.mode,
             ))
         )),
 
@@ -804,6 +817,7 @@ const M = {
         spawnExpression: $ => seq(TOKENS.SPAWN, optional(seq('(', $._expression, ')')), $.trailingLambdaExpression),
         synchronizedExpression: $ => seq(TOKENS.SYNCHRONIZED, '(', $._expression, ')', $.block),
         unsafeExpression: $ => seq(TOKENS.UNSAFE, $.block),
+        exclaveExpression: $ => seq('exclave', $.block),
         // 条件支持 let 模式解构串联:`let A <- x && let B <- y`,且 let 前可有布尔表达式
         // (如 `ok && let Some(a) <- f()`);无 let 时退化为普通表达式,树形与旧版一致
         ifExpression: $ => prec.left(seq(
@@ -956,6 +970,8 @@ const M = {
                     TOKENS.REDEF,
                     TOKENS.OPEN,
                     TOKENS.OVERRIDE,
+                    token('exclave'),
+                    token('demode'),
                     token('get'),
                     token('set'),
                 ),

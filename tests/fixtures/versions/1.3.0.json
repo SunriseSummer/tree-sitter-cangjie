@@ -1,0 +1,230 @@
+[
+  {
+    "name": "modal parameters and local arrays",
+    "source": "func sum(xs: Array<Int64> @ local?): Int64 {\n    var total = 0\n    for (x in xs) { total += x }\n    total\n}\nmain() {\n    let values = Array<Int64>(3, {i => i + 1}) @ local!\n    let plain: Int64 @ ~local = sum(values)\n    println(plain)\n}\n",
+    "nodes": {
+      "modalType": 2,
+      "mode": 3,
+      "modeSpecifier": 3
+    },
+    "stdout": "6\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "modal function types and return binding",
+    "source": "func choose(f: () -> String @ local?): Int64 { 0 }\nfunc invoke(f: (() -> Int64) @ local?): Int64 { f() }\nfunc inspect(f: (String @ local?) -> Int64): Int64 { f(\"abc\") }\n",
+    "nodes": {
+      "modalType": 3,
+      "arrowType": 3,
+      "mode": 3
+    }
+  },
+  {
+    "name": "modal prefix tuples and constant arrays",
+    "source": "func pair(value: (Int64, Bool) @ local?): (Int64, Bool) { value }\nfunc item(value: ?Int64 @ local?): Int64 { value ?? 0 }\nmain() {\n    let fixed: VArray<Int64, $2> @ local! = [3, 4]\n    let p: (Int64, Bool) @ local! = (fixed[0], true)\n    println(pair(p)[0])\n    println(item(Some(fixed[1])))\n}\n",
+    "nodes": {
+      "modalType": 4,
+      "mode": 4
+    },
+    "stdout": "3\n4\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "compact modal initializer and newline after at",
+    "source": "main() {\n    let n: Int64@local!=42\n    let m: Int64 @\n        local? = n\n    println(m)\n}\n",
+    "nodes": {
+      "modalType": 2,
+      "mode": 2
+    },
+    "stdout": "42\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "exclave constructors and this parameters",
+    "source": "class Label {\n    var text: String\n    init(text: String) { this.text = text }\n    exclave init(this @ local!, text: String @ local!) { this.text = text }\n    func size(this @ local?): Int64 { text.size }\n}\nmain() {\n    let tag = Label(\"robot\") @ local!\n    println(tag.size())\n}\n",
+    "nodes": {
+      "thisParameter": 2,
+      "modalType": 1,
+      "mode": 4,
+      "init": 2
+    },
+    "stdout": "5\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "demode member holds global value",
+    "source": "var tag: String = \"dock\"\nclass Marker {\n    demode var name: String\n    var value: String\n    exclave init(this @ local!, value: String @ local!) {\n        this.name = \"\"\n        this.value = value\n    }\n}\nfunc name(): String {\n    let marker = Marker(\"temporary\") @ local!\n    marker.name = tag\n    marker.name\n}\nmain() { println(name()) }\n",
+    "nodes": {
+      "thisParameter": 1,
+      "modalType": 1,
+      "mode": 3,
+      "classDefinition": 1
+    },
+    "stdout": "dock\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "exclave expression returns array",
+    "source": "func sequence(n: Int64): Array<Int64> @ local! {\n    exclave { Array<Int64>(n, {i => i * 2}) @ local! }\n}\nmain() {\n    let values = sequence(3)\n    println(values[2])\n}\n",
+    "nodes": {
+      "exclaveExpression": 1,
+      "modalType": 1,
+      "mode": 2
+    },
+    "stdout": "4\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "exclave modifier updates caller region",
+    "source": "exclave func replace(values: Array<String> @ local!, value: String @ local!): Unit {\n    values[0] = value\n}\nmain() {\n    let values: Array<String> @ local! = [\"old\"]\n    replace(values, \"new\")\n    println(values[0])\n}\n",
+    "nodes": {
+      "modalType": 3,
+      "mode": 3
+    },
+    "stdout": "new\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "nested function modal annotation",
+    "source": "func length(): Int64 {\n    let text: String @ local! = \"hello\"\n    let view: String @ local? = text\n    @ local? func count(): Int64 { view.size }\n    count()\n}\nmain() { println(length()) }\n",
+    "nodes": {
+      "functionDefinition": 2,
+      "modalType": 2,
+      "mode": 3,
+      "macroExpression": 0
+    },
+    "stdout": "5\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "this modes property and interface",
+    "source": "interface Measure { func size(this @ local?): Int64 }\nclass Counter <: Measure {\n    var n: Int64 = 0\n    init() {}\n    exclave init(this @ local!) {}\n    public func size(this @ local?): Int64 { n }\n    func reset(this @ local!): Unit { n = 0 }\n    prop text: String @ local! { get() { exclave { \"counter\" } } }\n}\n",
+    "nodes": {
+      "thisParameter": 4,
+      "modalType": 1,
+      "mode": 5,
+      "exclaveExpression": 1
+    },
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "copyable generic mode conversion",
+    "source": "struct Coordinate <: Copyable {\n    var x: Int64\n    init(x: Int64) { this.x = x }\n}\nfunc plain<T>(value: T @ local?): T where T <: Copyable { value }\nmain() {\n    let value: Coordinate @ local! = Coordinate(42)\n    println(plain(value).x)\n}\n",
+    "nodes": {
+      "modalType": 2,
+      "mode": 2,
+      "genericConstraints": 1
+    },
+    "stdout": "42\n",
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-local-mode"
+    ]
+  },
+  {
+    "name": "nonexperimental local words remain identifiers",
+    "source": "func exclave(n: Int64): Int64 { n + 1 }\nfunc demode(n: Int64): Int64 { n * 2 }\nfunc local(n: Int64): Int64 { n }\nmain() { println(local(demode(exclave(20)))) }\n",
+    "nodes": {
+      "functionDefinition": 3,
+      "mode": 0,
+      "exclaveExpression": 0
+    },
+    "compile": true,
+    "stdout": "42\n"
+  },
+  {
+    "name": "option wrapped trailing lambdas",
+    "source": "func apply(value: Int64, callback: Option<(Int64) -> Int64>): Int64 {\n    match (callback) { case Some(f) => f(value); case None => value }\n}\nfunc run(callback: Option<Option<() -> Int64>>): Int64 {\n    match (callback) { case Some(Some(f)) => f(); case _ => 0 }\n}\nmain() {\n    println(apply(10) {x => x + 1})\n    println(run {42})\n    println(run() {=> 42})\n}\n",
+    "nodes": {
+      "trailingLambdaExpression": 3,
+      "functionDefinition": 2
+    },
+    "compile": true,
+    "stdout": "11\n42\n42\n"
+  },
+  {
+    "name": "primitive alias conversions",
+    "source": "type Small = Int32\ntype Same = Small\ntype Real = Float64\ntype Character = Rune\nmain() {\n    let n: Small = Small(21)\n    let m: Same = Same(n)\n    let x = Real(1.5)\n    let r = Character(65)\n    println(m)\n    println(x)\n    println(r)\n}\n",
+    "nodes": {
+      "typeAlias": 4
+    },
+    "compile": true,
+    "stdout": "21\n1.500000\nA\n"
+  },
+  {
+    "name": "sealed exhaustive type patterns",
+    "source": "sealed abstract class Result {}\nclass Found <: Result { let value: Int64; init(n: Int64) { value = n } }\nclass Missing <: Result {}\nfunc code(value: Result): Int64 {\n    match (value) { case hit: Found => hit.value; case _: Missing => 0 }\n}\nmain() { println(code(Found(42))) }\n",
+    "nodes": {
+      "typePattern": 2,
+      "classDefinition": 3
+    },
+    "compile": true,
+    "stdout": "42\n"
+  },
+  {
+    "name": "extern runtime generic signatures",
+    "source": "func payload<R>(value: Extern<R>): Any where R <: ForeignRuntime<R> {\n    Extern<R>.getPayload(value)\n}\n",
+    "nodes": {
+      "genericConstraints": 1,
+      "typeArguments": 3,
+      "functionDefinition": 1
+    },
+    "compile": true
+  },
+  {
+    "name": "extern dynamic member and index operations",
+    "source": "func dispatch<R>(value: Extern<R>): Unit where R <: ForeignRuntime<R> {\n    let member = value.ready\n    let element = value[0]\n    value.ready = true\n    value[1] = member\n    value(element)\n}\n",
+    "nodes": {
+      "fieldAccess": 2,
+      "indexAccess": 2,
+      "callSuffix": 1
+    }
+  },
+  {
+    "name": "structured concurrency thread scope",
+    "source": "import std.concurrent.*\nmain() {\n    let total = threadScope<Int64, Int64> {group =>\n        group.launch {7}\n        group.launch {11}\n        var sum = 0\n        for (value in group) { sum += value }\n        sum\n    }\n    println(total)\n}\n",
+    "nodes": {
+      "trailingLambdaExpression": 3,
+      "forInExpression": 1
+    },
+    "compile": true,
+    "stdout": "18\n"
+  }
+]

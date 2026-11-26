@@ -260,3 +260,7 @@
 (featureId) @attribute
 "::" @punctuation.delimiter
 "@!" @punctuation.delimiter
+
+; Experimental local mode in the pinned Cangjie 1.3 nightly.
+["exclave" "demode"] @keyword
+(modeSpecifier) @type.qualifier

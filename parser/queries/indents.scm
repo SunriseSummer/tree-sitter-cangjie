@@ -80,3 +80,5 @@
   (lineComment)
   (blockComment)
 ] @indent.auto
+
+(exclaveExpression) @indent.begin

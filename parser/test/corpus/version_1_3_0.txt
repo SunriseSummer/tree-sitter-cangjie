@@ -1,0 +1,309 @@
+==================
+Cangjie 1.3 modal parameters and local arrays
+==================
+
+func sum(xs: Array<Int64> @ local?): Int64 {
+    var total = 0
+    for (x in xs) { total += x }
+    total
+}
+main() {
+    let values = Array<Int64>(3, {i => i + 1}) @ local!
+    let plain: Int64 @ ~local = sum(values)
+    println(plain)
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (modalType type: (arrayType (typeArguments (Int64))) (mode (modeSpecifier))))) (returnType (Int64)) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (forInExpression (varBindingPattern) (atomicVariable (varBindingPattern)) (block (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (atomicVariable (varBindingPattern))))) (atomicVariable (varBindingPattern)))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (Int64))) suffix: (callSuffix (integerLiteral) (lambdaExpression (lambdaParameters (lambdaParameter (varBindingPattern))) (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral))))) suffix: (mode (modeSpecifier)))) (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (Int64) (mode (modeSpecifier))) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+==================
+Cangjie 1.3 modal function types and return binding
+==================
+
+func choose(f: () -> String @ local?): Int64 { 0 }
+func invoke(f: (() -> Int64) @ local?): Int64 { f() }
+func inspect(f: (String @ local?) -> Int64): Int64 { f("abc") }
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (arrowType (modalType type: (String) (mode (modeSpecifier)))))) (returnType (Int64)) (block (integerLiteral))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (modalType type: (tupleType (arrowType (Int64))) (mode (modeSpecifier))))) (returnType (Int64)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (arrowType (modalType type: (String) (mode (modeSpecifier))) (Int64)))) (returnType (Int64)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))))))
+
+==================
+Cangjie 1.3 modal prefix tuples and constant arrays
+==================
+
+func pair(value: (Int64, Bool) @ local?): (Int64, Bool) { value }
+func item(value: ?Int64 @ local?): Int64 { value ?? 0 }
+main() {
+    let fixed: VArray<Int64, $2> @ local! = [3, 4]
+    let p: (Int64, Bool) @ local! = (fixed[0], true)
+    println(pair(p)[0])
+    println(item(Some(fixed[1])))
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (modalType type: (tupleType (Int64) (Bool)) (mode (modeSpecifier))))) (returnType (tupleType (Int64) (Bool))) (block (atomicVariable (varBindingPattern)))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (prefixType (modalType type: (Int64) (mode (modeSpecifier)))))) (returnType (Int64)) (block (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (userType (identifier) (typeArguments (Int64) (integerLiteral))) (mode (modeSpecifier))) initilizer: (arrayLiteral (integerLiteral) (integerLiteral))) (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (tupleType (Int64) (Bool)) (mode (modeSpecifier))) initilizer: (tupleExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral))) (booleanLiteral))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))) suffix: (indexAccess (integerLiteral))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral))))))))))))
+
+==================
+Cangjie 1.3 compact modal initializer and newline after at
+==================
+
+main() {
+    let n: Int64@local!=42
+    let m: Int64 @
+        local? = n
+    println(m)
+}
+
+---
+
+(translationUnit (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (Int64) (mode (modeSpecifier))) initilizer: (integerLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (Int64) (mode (modeSpecifier))) initilizer: (atomicVariable (varBindingPattern))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+==================
+Cangjie 1.3 exclave constructors and this parameters
+==================
+
+class Label {
+    var text: String
+    init(text: String) { this.text = text }
+    exclave init(this @ local!, text: String @ local!) { this.text = text }
+    func size(this @ local?): Int64 { text.size }
+}
+main() {
+    let tag = Label("robot") @ local!
+    println(tag.size())
+}
+
+---
+
+(translationUnit (classDefinition name: (className) (classBody (variableDeclaration name: (variableName (varBindingPattern)) type: (String)) (init (parameterList (parameter paraName: (identifier) type: (String))) (block (assignmentExpression variable: (postfixExpression operand: (thisSuperExpression) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) value: (atomicVariable (varBindingPattern))))) (init (modifiers) (parameterList (thisParameter (mode (modeSpecifier))) (parameter paraName: (identifier) type: (modalType type: (String) (mode (modeSpecifier))))) (block (assignmentExpression variable: (postfixExpression operand: (thisSuperExpression) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) value: (atomicVariable (varBindingPattern))))) (functionDefinition name: (funcName) (parameterList (thisParameter (mode (modeSpecifier)))) (returnType (Int64)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))) suffix: (mode (modeSpecifier)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix)))))))
+
+==================
+Cangjie 1.3 demode member holds global value
+==================
+
+var tag: String = "dock"
+class Marker {
+    demode var name: String
+    var value: String
+    exclave init(this @ local!, value: String @ local!) {
+        this.name = ""
+        this.value = value
+    }
+}
+func name(): String {
+    let marker = Marker("temporary") @ local!
+    marker.name = tag
+    marker.name
+}
+main() { println(name()) }
+
+---
+
+(translationUnit (variableDeclaration name: (variableName (varBindingPattern)) type: (String) initilizer: (stringLiteral)) (classDefinition name: (className) (classBody (variableDeclaration (modifiers) name: (variableName (varBindingPattern)) type: (String)) (variableDeclaration name: (variableName (varBindingPattern)) type: (String)) (init (modifiers) (parameterList (thisParameter (mode (modeSpecifier))) (parameter paraName: (identifier) type: (modalType type: (String) (mode (modeSpecifier))))) (block (assignmentExpression variable: (postfixExpression operand: (thisSuperExpression) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) value: (stringLiteral)) (assignmentExpression variable: (postfixExpression operand: (thisSuperExpression) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) value: (atomicVariable (varBindingPattern))))))) (functionDefinition name: (funcName) (parameterList) (returnType (String)) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral))) suffix: (mode (modeSpecifier)))) (assignmentExpression variable: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) value: (atomicVariable (varBindingPattern))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))))))
+
+==================
+Cangjie 1.3 exclave expression returns array
+==================
+
+func sequence(n: Int64): Array<Int64> @ local! {
+    exclave { Array<Int64>(n, {i => i * 2}) @ local! }
+}
+main() {
+    let values = sequence(3)
+    println(values[2])
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (modalType type: (arrayType (typeArguments (Int64))) (mode (modeSpecifier)))) (block (exclaveExpression (block (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (Int64))) suffix: (callSuffix (atomicVariable (varBindingPattern)) (lambdaExpression (lambdaParameters (lambdaParameter (varBindingPattern))) (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral))))) suffix: (mode (modeSpecifier))))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral))))))))
+
+==================
+Cangjie 1.3 exclave modifier updates caller region
+==================
+
+exclave func replace(values: Array<String> @ local!, value: String @ local!): Unit {
+    values[0] = value
+}
+main() {
+    let values: Array<String> @ local! = ["old"]
+    replace(values, "new")
+    println(values[0])
+}
+
+---
+
+(translationUnit (functionDefinition (modifiers) name: (funcName) (parameterList (parameter paraName: (identifier) type: (modalType type: (arrayType (typeArguments (String))) (mode (modeSpecifier)))) (parameter paraName: (identifier) type: (modalType type: (String) (mode (modeSpecifier))))) (returnType (Unit)) (block (assignmentExpression variable: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral))) value: (atomicVariable (varBindingPattern))))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (arrayType (typeArguments (String))) (mode (modeSpecifier))) initilizer: (arrayLiteral (stringLiteral))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)) (stringLiteral))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral))))))))
+
+==================
+Cangjie 1.3 nested function modal annotation
+==================
+
+func length(): Int64 {
+    let text: String @ local! = "hello"
+    let view: String @ local? = text
+    @ local? func count(): Int64 { view.size }
+    count()
+}
+main() { println(length()) }
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList) (returnType (Int64)) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (String) (mode (modeSpecifier))) initilizer: (stringLiteral)) (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (String) (mode (modeSpecifier))) initilizer: (atomicVariable (varBindingPattern))) (functionDefinition (mode (modeSpecifier)) name: (funcName) (parameterList) (returnType (Int64)) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))))))
+
+==================
+Cangjie 1.3 this modes property and interface
+==================
+
+interface Measure { func size(this @ local?): Int64 }
+class Counter <: Measure {
+    var n: Int64 = 0
+    init() {}
+    exclave init(this @ local!) {}
+    public func size(this @ local?): Int64 { n }
+    func reset(this @ local!): Unit { n = 0 }
+    prop text: String @ local! { get() { exclave { "counter" } } }
+}
+
+---
+
+(translationUnit (interfaceDefinition name: (interfaceName) (interfaceBody (functionDefinition name: (funcName) (parameterList (thisParameter (mode (modeSpecifier)))) (returnType (Int64))))) (classDefinition name: (className) (superOrInterface (identifier)) (classBody (variableDeclaration name: (variableName (varBindingPattern)) type: (Int64) initilizer: (integerLiteral)) (init (parameterList) (block)) (init (modifiers) (parameterList (thisParameter (mode (modeSpecifier)))) (block)) (functionDefinition (modifiers) name: (funcName) (parameterList (thisParameter (mode (modeSpecifier)))) (returnType (Int64)) (block (atomicVariable (varBindingPattern)))) (functionDefinition name: (funcName) (parameterList (thisParameter (mode (modeSpecifier)))) (returnType (Unit)) (block (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (integerLiteral)))) (propertyDefinition name: (propertyName) type: (modalType type: (String) (mode (modeSpecifier))) getter: (block (exclaveExpression (block (stringLiteral))))))))
+
+==================
+Cangjie 1.3 copyable generic mode conversion
+==================
+
+struct Coordinate <: Copyable {
+    var x: Int64
+    init(x: Int64) { this.x = x }
+}
+func plain<T>(value: T @ local?): T where T <: Copyable { value }
+main() {
+    let value: Coordinate @ local! = Coordinate(42)
+    println(plain(value).x)
+}
+
+---
+
+(translationUnit (structDefinition name: (structName) (superOrInterface (identifier)) (structBody (variableDeclaration name: (variableName (varBindingPattern)) type: (Int64)) (init (parameterList (parameter paraName: (identifier) type: (Int64))) (block (assignmentExpression variable: (postfixExpression operand: (thisSuperExpression) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) value: (atomicVariable (varBindingPattern))))))) (functionDefinition name: (funcName) (typeParameters (identifier)) (parameterList (parameter paraName: (identifier) type: (modalType type: (userType (identifier)) (mode (modeSpecifier))))) (returnType (userType (identifier))) (genericConstraints (genericConstraint (identifier) (userType (identifier)))) (block (atomicVariable (varBindingPattern)))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (modalType type: (userType (identifier)) (mode (modeSpecifier))) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))) suffix: (fieldAccess (atomicVariable (varBindingPattern)))))))))
+
+==================
+Cangjie 1.3 nonexperimental local words remain identifiers
+==================
+
+func exclave(n: Int64): Int64 { n + 1 }
+func demode(n: Int64): Int64 { n * 2 }
+func local(n: Int64): Int64 { n }
+main() { println(local(demode(exclave(20)))) }
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (Int64)) (block (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (Int64)) (block (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64))) (returnType (Int64)) (block (atomicVariable (varBindingPattern)))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern (identifier))) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern (identifier))) suffix: (callSuffix (integerLiteral))))))))))))
+
+==================
+Cangjie 1.3 option wrapped trailing lambdas
+==================
+
+func apply(value: Int64, callback: Option<(Int64) -> Int64>): Int64 {
+    match (callback) { case Some(f) => f(value); case None => value }
+}
+func run(callback: Option<Option<() -> Int64>>): Int64 {
+    match (callback) { case Some(Some(f)) => f(); case _ => 0 }
+}
+main() {
+    println(apply(10) {x => x + 1})
+    println(run {42})
+    println(run() {=> 42})
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (Int64)) (parameter paraName: (identifier) type: (userType (identifier) (typeArguments (arrowType (Int64) (Int64)))))) (returnType (Int64)) (block (matchExpression (atomicVariable (varBindingPattern)) (matchCase (enumPattern (varBindingPattern) (tuplePattern (varBindingPattern))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) (matchCase (varBindingPattern) (atomicVariable (varBindingPattern)))))) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (userType (identifier) (typeArguments (userType (identifier) (typeArguments (arrowType (Int64)))))))) (returnType (Int64)) (block (matchExpression (atomicVariable (varBindingPattern)) (matchCase (enumPattern (varBindingPattern) (tuplePattern (enumPattern (varBindingPattern) (tuplePattern (varBindingPattern))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix))) (matchCase (wildcardPattern) (integerLiteral))))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral))) suffix: (trailingLambdaExpression (lambdaParameters (lambdaParameter (varBindingPattern))) (binaryExpression left: (atomicVariable (varBindingPattern)) right: (integerLiteral)))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (trailingLambdaExpression (integerLiteral))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)) suffix: (trailingLambdaExpression (integerLiteral))))))))
+
+==================
+Cangjie 1.3 primitive alias conversions
+==================
+
+type Small = Int32
+type Same = Small
+type Real = Float64
+type Character = Rune
+main() {
+    let n: Small = Small(21)
+    let m: Same = Same(n)
+    let x = Real(1.5)
+    let r = Character(65)
+    println(m)
+    println(x)
+    println(r)
+}
+
+---
+
+(translationUnit (typeAlias name: (typeAliasName) type: (Int32)) (typeAlias name: (typeAliasName) type: (userType (identifier))) (typeAlias name: (typeAliasName) type: (Float64)) (typeAlias name: (typeAliasName) type: (Rune)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) type: (userType (identifier)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))) (variableDeclaration name: (variableName (varBindingPattern)) type: (userType (identifier)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (floatLiteral)))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+==================
+Cangjie 1.3 sealed exhaustive type patterns
+==================
+
+sealed abstract class Result {}
+class Found <: Result { let value: Int64; init(n: Int64) { value = n } }
+class Missing <: Result {}
+func code(value: Result): Int64 {
+    match (value) { case hit: Found => hit.value; case _: Missing => 0 }
+}
+main() { println(code(Found(42))) }
+
+---
+
+(translationUnit (classDefinition (modifiers) name: (className) (classBody)) (classDefinition name: (className) (superOrInterface (identifier)) (classBody (variableDeclaration name: (variableName (varBindingPattern)) type: (Int64)) (init (parameterList (parameter paraName: (identifier) type: (Int64))) (block (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (atomicVariable (varBindingPattern))))))) (classDefinition name: (className) (superOrInterface (identifier)) (classBody)) (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (userType (identifier)))) (returnType (Int64)) (block (matchExpression (atomicVariable (varBindingPattern)) (matchCase (typePattern (varBindingPattern) (userType (identifier))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern))))) (matchCase (typePattern (wildcardPattern) (userType (identifier))) (integerLiteral))))) (mainDefinition (parameterList) (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral))))))))))
+
+==================
+Cangjie 1.3 extern runtime generic signatures
+==================
+
+func payload<R>(value: Extern<R>): Any where R <: ForeignRuntime<R> {
+    Extern<R>.getPayload(value)
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (typeParameters (identifier)) (parameterList (parameter paraName: (identifier) type: (userType (identifier) (typeArguments (userType (identifier)))))) (returnType (userType (identifier))) (genericConstraints (genericConstraint (identifier) (userType (identifier) (typeArguments (userType (identifier)))))) (block (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (userType (identifier)))) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+==================
+Cangjie 1.3 extern dynamic member and index operations
+==================
+
+func dispatch<R>(value: Extern<R>): Unit where R <: ForeignRuntime<R> {
+    let member = value.ready
+    let element = value[0]
+    value.ready = true
+    value[1] = member
+    value(element)
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (typeParameters (identifier)) (parameterList (parameter paraName: (identifier) type: (userType (identifier) (typeArguments (userType (identifier)))))) (returnType (Unit)) (genericConstraints (genericConstraint (identifier) (userType (identifier) (typeArguments (userType (identifier)))))) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern))))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral)))) (assignmentExpression variable: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) value: (booleanLiteral)) (assignmentExpression variable: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (integerLiteral))) value: (atomicVariable (varBindingPattern))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+==================
+Cangjie 1.3 structured concurrency thread scope
+==================
+
+import std.concurrent.*
+main() {
+    let total = threadScope<Int64, Int64> {group =>
+        group.launch {7}
+        group.launch {11}
+        var sum = 0
+        for (value in group) { sum += value }
+        sum
+    }
+    println(total)
+}
+
+---
+
+(translationUnit (importList (packageFull packageName: (scoped_identifier scope: (identifier) name: (identifier)) (asterisk))) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (postfixExpression operand: (atomicVariable (varBindingPattern) (typeArguments (Int64) (Int64))) suffix: (trailingLambdaExpression (lambdaParameters (lambdaParameter (varBindingPattern))) (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (trailingLambdaExpression (integerLiteral))) (postfixExpression operand: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (fieldAccess (atomicVariable (varBindingPattern)))) suffix: (trailingLambdaExpression (integerLiteral))) (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (integerLiteral)) (forInExpression (varBindingPattern) (atomicVariable (varBindingPattern)) (block (assignmentExpression variable: (atomicVariable (varBindingPattern)) value: (atomicVariable (varBindingPattern))))) (atomicVariable (varBindingPattern))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))

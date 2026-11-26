@@ -5,14 +5,14 @@ Python bindings for the [Tree-sitter](https://tree-sitter.github.io/tree-sitter/
 highlights, indents, locals, tags, and textobjects queries maintained by the
 `tree-sitter-cangjie` project.
 
-The current grammar targets Cangjie 1.2.1.
+The current grammar targets the Cangjie 1.3.0-alpha.20261126001016 nightly.
 
 ## Installation
 
 Install the binding together with the Python Tree-sitter runtime:
 
 ```shell
-pip install "tree-sitter-cangjie[core]"
+pip install "tree-sitter-cangjie[core]==1.3.0a20261126001016"
 ```
 
 If `tree-sitter` is already managed separately in your application:
@@ -93,5 +93,8 @@ new_tree = parser.parse(new_source, tree)
 changed_ranges = tree.changed_ranges(new_tree)
 ```
 
-This branch targets Cangjie 1.2.1. Install `tree-sitter-cangjie@1.2.1` (npm)
-or `tree-sitter-cangjie==1.2.1` (PyPI) for a reproducible language baseline.
+This branch targets the experimental Cangjie `1.3.0-alpha.20261126001016` nightly.
+Install `tree-sitter-cangjie@1.3.0-alpha.20261126001016` from npm (`next` tag),
+or `tree-sitter-cangjie==1.3.0a20261126001016` from PyPI.
+This is not a final Cangjie 1.3.0 release. Local-mode compilation requires
+`--experimental --enable-local-mode`; the grammar recognizes its syntax directly.

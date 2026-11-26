@@ -54,7 +54,7 @@ assert.match(
 );
 assert.match(
   pythonVersion,
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-post(0|[1-9]\d*))?$/,
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:post|alpha\.)(0|[1-9]\d*))?$/,
   `unsupported Python release version: ${pythonVersion}`
 );
 assert.equal(
@@ -371,7 +371,7 @@ assert.equal(
 const pythonArtifactVersion = pythonVersion.replace(
   /[-_.]post[-_.]?(\d+)$/i,
   (_, number) => `.post${Number(number)}`
-);
+).replace(/-alpha\.(\d+)$/, "a$1");
 console.log(
   `release metadata validated: source ${version}, ` +
     `Python artifacts ${pythonArtifactVersion}`

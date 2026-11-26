@@ -1,0 +1,95 @@
+{
+  "sdkVersion": "1.2.1",
+  "compiler": "Cangjie Compiler: 1.2.1 (cjnative)\nTarget: x86_64-unknown-linux-gnu",
+  "cases": [
+    {
+      "name": "organization package",
+      "compiled": true
+    },
+    {
+      "name": "organization macro package",
+      "compiled": true
+    },
+    {
+      "name": "effect perform and resume",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "generic interfaces and nested types",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "collections and chained optional access",
+      "compiled": true,
+      "executed": true,
+      "stdout": "3\n6\n",
+      "outputMatched": true
+    },
+    {
+      "name": "pattern guards and destructuring",
+      "compiled": true,
+      "executed": true,
+      "stdout": "3\n7\n",
+      "outputMatched": true
+    },
+    {
+      "name": "properties operators and extensions",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "concurrency and error handling",
+      "compiled": true,
+      "executed": true,
+      "stdout": "done\n42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "macros quotes and splices",
+      "compiled": true
+    },
+    {
+      "name": "unicode raw identifiers and nested comments",
+      "compiled": true,
+      "executed": true,
+      "stdout": "结果：42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "byte raw and multiline strings",
+      "compiled": true,
+      "executed": true,
+      "stdout": "88\na \\ literal ${notInterpolation}\nfirst\nsecond\n\n",
+      "outputMatched": true
+    },
+    {
+      "name": "function values and trailing lambdas",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "generic constraints arrays and foreign blocks",
+      "compiled": true,
+      "executed": true,
+      "stdout": "1\n21\n",
+      "outputMatched": true
+    },
+    {
+      "name": "contextual experimental names remain identifiers",
+      "compiled": true,
+      "executed": true,
+      "stdout": "45\n",
+      "outputMatched": true
+    }
+  ]
+}

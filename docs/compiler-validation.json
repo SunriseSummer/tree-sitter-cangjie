@@ -1,6 +1,6 @@
 {
-  "sdkVersion": "1.2.1",
-  "compiler": "Cangjie Compiler: 1.2.1 (cjnative)\nTarget: x86_64-unknown-linux-gnu",
+  "sdkVersion": "1.3.0-alpha.20261126001016",
+  "compiler": "Cangjie Compiler: 1.3.0-alpha.20261126001016 (cjnative)\nTarget: x86_64-unknown-linux-gnu",
   "cases": [
     {
       "name": "organization package",
@@ -89,6 +89,112 @@
       "compiled": true,
       "executed": true,
       "stdout": "45\n",
+      "outputMatched": true
+    },
+    {
+      "name": "modal parameters and local arrays",
+      "compiled": true,
+      "executed": true,
+      "stdout": "6\n",
+      "outputMatched": true
+    },
+    {
+      "name": "modal prefix tuples and constant arrays",
+      "compiled": true,
+      "executed": true,
+      "stdout": "3\n4\n",
+      "outputMatched": true
+    },
+    {
+      "name": "compact modal initializer and newline after at",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "exclave constructors and this parameters",
+      "compiled": true,
+      "executed": true,
+      "stdout": "5\n",
+      "outputMatched": true
+    },
+    {
+      "name": "demode member holds global value",
+      "compiled": true,
+      "executed": true,
+      "stdout": "dock\n",
+      "outputMatched": true
+    },
+    {
+      "name": "exclave expression returns array",
+      "compiled": true,
+      "executed": true,
+      "stdout": "4\n",
+      "outputMatched": true
+    },
+    {
+      "name": "exclave modifier updates caller region",
+      "compiled": true,
+      "executed": true,
+      "stdout": "new\n",
+      "outputMatched": true
+    },
+    {
+      "name": "nested function modal annotation",
+      "compiled": true,
+      "executed": true,
+      "stdout": "5\n",
+      "outputMatched": true
+    },
+    {
+      "name": "this modes property and interface",
+      "compiled": true
+    },
+    {
+      "name": "copyable generic mode conversion",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "nonexperimental local words remain identifiers",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "option wrapped trailing lambdas",
+      "compiled": true,
+      "executed": true,
+      "stdout": "11\n42\n42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "primitive alias conversions",
+      "compiled": true,
+      "executed": true,
+      "stdout": "21\n1.500000\nA\n",
+      "outputMatched": true
+    },
+    {
+      "name": "sealed exhaustive type patterns",
+      "compiled": true,
+      "executed": true,
+      "stdout": "42\n",
+      "outputMatched": true
+    },
+    {
+      "name": "extern runtime generic signatures",
+      "compiled": true
+    },
+    {
+      "name": "structured concurrency thread scope",
+      "compiled": true,
+      "executed": true,
+      "stdout": "18\n",
       "outputMatched": true
     }
   ]
