@@ -1,11 +1,28 @@
 # Tree-Sitter-Cangjie
 
-`tree-sitter-cangjie` 是适配[仓颉编程语言](https://cangjie-lang.cn/)（Cangjie 1.0.5）的 Tree-sitter 语法解析器。
+`tree-sitter-cangjie` 是适配[仓颉编程语言](https://cangjie-lang.cn/)（Cangjie 1.2.1）的 Tree-sitter 语法解析器。
 仓库维护并发布三类产物：
 
 - Node.js 原生插件：发布到 npm 和 GitHub Releases。
 - Python 原生插件：发布到 PyPI 和 GitHub Releases。
 - WebAssembly 模块：包含在 npm 包中，同时发布到 GitHub Releases。
+
+## 语言版本
+
+| Git 分支 | npm / PyPI 版本 | 语言基线 |
+| --- | --- | --- |
+| `cangjie-1.0.5` | `1.0.5` / `1.0.5.post1` | 原有 1.0.x |
+| `cangjie-1.2.1` | `1.2.1` | 官方 1.2.1 STS SDK |
+| `cangjie-1.3.0` | alpha 预发布 | 固定 1.3 nightly，详见该分支 |
+
+本分支增加组织名路径、`common/specific`、common enum 的 `...`、`features`、
+`@!` 注解和实验性效应处理器。保留 1.0.x 测试语料的既有 AST 形状。
+Tree-sitter 接受编译器普通/实验模式的语法并集，不执行名称解析、类型检查、
+平台链接或静态初始化规则检查；实验特性的编译开关仍由 `cjc` 决定。
+
+安装固定版本：`npm install tree-sitter-cangjie@1.2.1` 或
+`pip install tree-sitter-cangjie==1.2.1`。
+适配依据和验证方法见 [版本适配说明](docs/version-support.md)。
 
 ## 工程结构
 
@@ -140,7 +157,7 @@ npm run test:python
 `.github/workflows/ci.yml` 会验证 parser 生成结果和 corpus、WASM、六个平台目标的
 Node 原生插件，以及六个平台目标的 Python wheel。
 
-`.github/workflows/release.yml` 由 `cangjie-1.0.5` 分支手动触发，不会回写或推送
+`.github/workflows/release.yml` 由 `cangjie-1.2.1` 分支手动触发，不会回写或推送
 源码。触发时通过 `operation` 选择操作：
 
 - `onepass`：全量构建测试，创建完整 GitHub Release，然后发布 npm 和 PyPI。

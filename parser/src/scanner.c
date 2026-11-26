@@ -199,7 +199,12 @@ static bool scan_string_content(TSLexer *lexer, Scanner *scanner) {
 //         .fill(1)
 //         .stroke(2)
 // 排除项:`..`/`..=` 是区间运算符,`.5` 这类以数字开头的是浮点字面量。
-static bool next_token_starts_member_access(TSLexer *lexer) {
+static bool keyword_equals(const char *a, const char *b) {
+  while (*a && *a == *b) { ++a; ++b; }
+  return *a == *b;
+}
+
+static bool next_token_continues_expression(TSLexer *lexer) {
   for (;;) {
     if (iswspace(lexer->lookahead)) {
       advance(lexer);
@@ -241,6 +246,25 @@ static bool next_token_starts_member_access(TSLexer *lexer) {
     }
     break;
   }
+  // A newline before a continuation clause belongs to the same expression.
+  // Marking it as a terminator makes a completed try reduce before catch or
+  // handle, or commits the parser to a nonexistent extra handler after try.
+  // Do not match longer identifiers such as handleRequest or catchError.
+  if (lexer->lookahead >= 'a' && lexer->lookahead <= 'z') {
+    char word[9] = {0};
+    unsigned length = 0;
+    while ((lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||
+           (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
+           (lexer->lookahead >= '0' && lexer->lookahead <= '9') ||
+           lexer->lookahead == '_' || lexer->lookahead >= 0x80) {
+      if (lexer->lookahead >= 0x80) return false;
+      if (length >= sizeof(word) - 1) return false;
+      word[length++] = (char)lexer->lookahead;
+      advance(lexer);
+    }
+    return keyword_equals(word, "catch") || keyword_equals(word, "finally") ||
+           keyword_equals(word, "handle") || keyword_equals(word, "else");
+  }
   if (lexer->lookahead != '.') return false;
   advance(lexer);
   if (lexer->lookahead == '.') return false;                       // `..` / `..=` 区间运算符
@@ -275,7 +299,7 @@ bool tree_sitter_cangjie_external_scanner_scan(void *payload, TSLexer *lexer, co
     if (lexer->lookahead == '\n') {
       advance(lexer);
       lexer->mark_end(lexer);  // token 到此为止,后续 advance 仅作前瞻
-      if (next_token_starts_member_access(lexer)) {
+      if (next_token_continues_expression(lexer)) {
         return false;  // 抑制:换行交由 extras 吸收,链式调用跨行延续
       }
       lexer->result_symbol = _NEWLINE;

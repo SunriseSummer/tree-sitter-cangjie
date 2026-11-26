@@ -1,0 +1,17 @@
+{
+  "languageVersion": "1.2.1",
+  "channel": "stable",
+  "sdkVersion": "1.2.1",
+  "sdkUrl": "https://cangjie-lang.cn/v1/files/auth/downLoad?nsId=142267&fileName=cangjie-sdk-linux-x64-1.2.1.tar.gz&objectKey=6af2edbae4bd101f57762f7c",
+  "sdkSha256": "5616624fcb48db150df2accde6669a2c8cc5e851d79e623a5469c4e4cd7a491f",
+  "fixtures": [
+    "1.2.1.json"
+  ],
+  "references": [
+    "https://cj-docs.gitcode.com/zh/1.2.1/dev-guide/source_zh_cn/package/package_name.html",
+    "https://cj-docs.gitcode.com/zh/1.2.1/dev-guide/source_zh_cn/multiplatform/common_platform.html",
+    "https://gitcode.com/Cangjie/cangjie_compiler/tree/release/1.2/src/Parse"
+  ],
+  "stdxUrl": "https://gitcode.com/Cangjie/cangjie_stdx/releases/download/v1.2.1.1/cangjie-stdx-linux-x64-1.2.1.1.zip",
+  "stdxSha256": "21464b7a53ebf22f8f6a00d6f5837a11c177f35f37cecb9b5422e49b3237c89b"
+}

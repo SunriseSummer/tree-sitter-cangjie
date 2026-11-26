@@ -55,8 +55,8 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$OPERATION" = "onepass" ] || [ "$OPERATION" = "release" ]; then
-            if [ "$GITHUB_REF_TYPE" != "branch" ] || [ "$GITHUB_REF_NAME" != "cangjie-1.0.5" ]; then
-              echo "::error::Run onepass and release from the cangjie-1.0.5 branch"
+            if [ "$GITHUB_REF_TYPE" != "branch" ] || [ "$GITHUB_REF_NAME" != "cangjie-1.2.1" ]; then
+              echo "::error::Run onepass and release from the cangjie-1.2.1 branch"
               exit 1
             fi
             node scripts/validate-release.mjs

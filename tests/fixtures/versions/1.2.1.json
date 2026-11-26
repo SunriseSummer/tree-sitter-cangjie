@@ -1,0 +1,245 @@
+[
+  {
+    "name": "organization package",
+    "source": "package sunrise::robot.navigation\npublic func plan(): Int64 { 42 }\n",
+    "nodes": {
+      "organizationQualifiedName": 1,
+      "functionDefinition": 1
+    },
+    "compile": true
+  },
+  {
+    "name": "organization macro package",
+    "source": "macro package sunrise::macros\nimport std.ast.*\npublic macro Identity(t: Tokens): Tokens { t }\n",
+    "nodes": {
+      "organizationQualifiedName": 1,
+      "macroPackageDeclaration": 1,
+      "macroDefinition": 1
+    },
+    "compilerFlags": [
+      "--compile-macro"
+    ],
+    "compile": true
+  },
+  {
+    "name": "organization import forms",
+    "source": "package client\nimport sunrise::robot.Plan\nimport sunrise::robot.*\nimport sunrise::robot.Plan as PathPlan\nimport sunrise::robot.{Plan, Graph as RouteGraph}\nimport {sunrise::robot.Plan, other::maps.Grid}\n",
+    "nodes": {
+      "organizationQualifiedName": 6,
+      "importList": 5,
+      "packageAlias": 2
+    }
+  },
+  {
+    "name": "common declarations",
+    "source": "package shared\npublic common func platformName(): String\npublic common class Device {\n    common init()\n    common var ready: Bool\n    common func open(): Unit\n    common prop title: String\n}\ncommon struct Point { common var x: Int64; common init(x: Int64) }\ncommon interface Named { common func name(): String }\n",
+    "nodes": {
+      "classDefinition": 1,
+      "structDefinition": 1,
+      "interfaceDefinition": 1,
+      "init": 2,
+      "propertyDefinition": 1
+    }
+  },
+  {
+    "name": "specific declarations",
+    "source": "package shared\npublic specific func platformName(): String { \"Linux\" }\npublic specific class Device {\n    specific init() {}\n    specific var ready: Bool = true\n    specific func open(): Unit {}\n    specific prop title: String { get() { \"ready\" } }\n}\nspecific type NativeHandle = Int64\n",
+    "nodes": {
+      "classDefinition": 1,
+      "functionDefinition": 2,
+      "typeAlias": 1
+    }
+  },
+  {
+    "name": "common extensions and enums",
+    "source": "package shared\ncommon enum Choice<T> { | One(T) | Two | ...\n    common func value(): T\n}\ncommon extend Int64 { common func twice(): Int64 }\nspecific extend Int32 { specific func twice(): Int32 { this * 2 } }\n",
+    "nodes": {
+      "enumEllipsis": 1,
+      "enumConstructor": 2,
+      "extendDefinition": 2
+    }
+  },
+  {
+    "name": "feature declarations",
+    "source": "features { robot.navigation, robot.mapping, }\npackage robot\npublic func enabled(): Bool { true }\n",
+    "nodes": {
+      "featuresDirective": 1,
+      "featureId": 2
+    }
+  },
+  {
+    "name": "empty feature declarations",
+    "source": "features {}\npackage robot\nfunc enabled() {}\n",
+    "nodes": {
+      "featuresDirective": 1,
+      "featureId": 0
+    }
+  },
+  {
+    "name": "effect perform and resume",
+    "source": "import stdx.effect.*\nclass Read <: Command<Int64> {}\nmain() {\n    let value = try { perform Read() } handle (r: Read) { resume with 42 }\n    println(value)\n}\n",
+    "nodes": {
+      "performExpression": 1,
+      "resumeExpression": 1,
+      "handleClause": 1
+    },
+    "compile": true,
+    "compilerFlags": [
+      "--experimental",
+      "--enable-eh"
+    ],
+    "stdout": "42\n"
+  },
+  {
+    "name": "effect throwing and mixed handlers",
+    "source": "func request(): Int64 {\n    try { perform Read() }\n    handle (r: Read | Write) { resume throwing Exception(\"cancelled\") }\n    catch (e: Exception) { 0 }\n    handle (_: Retry) { resume }\n    finally { cleanup() }\n}\n",
+    "nodes": {
+      "performExpression": 1,
+      "resumeExpression": 2,
+      "handleClause": 2,
+      "tryExpression": 1
+    }
+  },
+  {
+    "name": "effect nested handlers",
+    "source": "func run() {\n    try {\n        try { perform Ask(1) } handle (_: Ask) { resume with perform Ask(2) }\n    } handle (request: Ask) { resume with 3 }\n}\n",
+    "nodes": {
+      "performExpression": 2,
+      "resumeExpression": 2,
+      "handleClause": 2
+    }
+  },
+  {
+    "name": "interop annotations",
+    "source": "@!JavaMirror[\"java.lang.Object\"]\nforeign class JObject {\n    public init()\n    public func toString(): String\n}\n@C\nforeign { func puts(value: CString): Int32 }\n",
+    "nodes": {
+      "macroExpression": 2,
+      "foreignDeclaration": 2,
+      "classDefinition": 1
+    }
+  },
+  {
+    "name": "env conditional annotations",
+    "source": "@When[env[\"ROBOT_BACKEND\"] == \"simulation\"]\nfunc backend(): String { \"simulation\" }\n@When[os == \"Linux\" && arch == \"x86_64\"]\nfunc platform(): String { \"linux\" }\n",
+    "nodes": {
+      "macroExpression": 2,
+      "functionDefinition": 2,
+      "indexAccess": 1
+    }
+  },
+  {
+    "name": "generic interfaces and nested types",
+    "source": "interface Shape<T> { func value(): T }\nclass Box<T> <: Shape<T> {\n    let v: T\n    init(v: T) { this.v = v }\n    public func value(): T { v }\n}\ntype Factory<T> = () -> Box<T>\nfunc identity<T>(x: T): T { x }\nmain() { println(identity<Int64>(42)) }\n",
+    "nodes": {
+      "typeAlias": 1,
+      "typeArguments": 2,
+      "classDefinition": 1
+    },
+    "compile": true,
+    "stdout": "42\n"
+  },
+  {
+    "name": "collections and chained optional access",
+    "source": "import std.collection.*\nfunc total(xs: ArrayList<Int64>): Int64 {\n    var sum = 0\n    for (x in xs) { sum += x }\n    sum\n}\nmain() {\n    let values = ArrayList<Int64>([1, 2, 3])\n    let maybe: ?ArrayList<Int64> = values\n    println(maybe?.size ?? 0)\n    println(total(values))\n}\n",
+    "nodes": {
+      "forInExpression": 1,
+      "questAccess": 1
+    },
+    "compile": true,
+    "stdout": "3\n6\n"
+  },
+  {
+    "name": "pattern guards and destructuring",
+    "source": "enum Event { Point(Int64, Int64) | Empty }\nfunc value(e: Event): Int64 {\n    match (e) { case Point(x, y) where x > 0 => x + y; case _ => 0 }\n}\nmain() {\n    let (x, y) = (1, 2)\n    if (let Some(a) <- Some(x) && let Some(b) <- Some(y)) { println(a + b) }\n    println(value(Event.Point(3, 4)))\n}\n",
+    "nodes": {
+      "patternGuard": 1,
+      "tuplePattern": 4,
+      "enumPattern": 3
+    },
+    "compile": true,
+    "stdout": "3\n7\n"
+  },
+  {
+    "name": "properties operators and extensions",
+    "source": "struct Vec {\n    let x: Int64\n    init(x: Int64) { this.x = x }\n    operator func +(other: Vec): Vec { Vec(x + other.x) }\n    prop value: Int64 { get() { x } }\n}\nextend Vec { func doubled(): Vec { this + this } }\nmain() { println(Vec(21).doubled().value) }\n",
+    "nodes": {
+      "operatorFunctionDefinition": 1,
+      "extendDefinition": 1,
+      "propertyDefinition": 1
+    },
+    "compile": true,
+    "stdout": "42\n"
+  },
+  {
+    "name": "concurrency and error handling",
+    "source": "import std.sync.*\nfunc calculate(): Int64 {\n    let future = spawn {=> 42 }\n    try { future.get() } catch (e: Exception) { 0 } finally { println(\"done\") }\n}\nmain() { println(calculate()) }\n",
+    "nodes": {
+      "spawnExpression": 1,
+      "tryExpression": 1
+    },
+    "compile": true,
+    "stdout": "done\n42\n"
+  },
+  {
+    "name": "macros quotes and splices",
+    "source": "macro package syntax\nimport std.ast.*\npublic macro Answer(t: Tokens): Tokens {\n    let value = quote(42)\n    quote($(value) + 1)\n}\n",
+    "nodes": {
+      "macroDefinition": 1,
+      "quoteExpression": 2
+    },
+    "compile": true,
+    "compilerFlags": [
+      "--compile-macro"
+    ]
+  },
+  {
+    "name": "unicode raw identifiers and nested comments",
+    "source": "/* outer /* inner */ outer */\nfunc 计算(`type`: Int64): Int64 { `type` * 2 }\nmain() { println(\"结果：${计算(21)}\") }\n",
+    "nodes": {
+      "blockComment": 1,
+      "functionDefinition": 1
+    },
+    "compile": true,
+    "stdout": "结果：42\n"
+  },
+  {
+    "name": "byte raw and multiline strings",
+    "source": "main() {\n    let b: Byte = b'X'\n    let text = ##\"a \\ literal ${notInterpolation}\"##\n    let lines = \"\"\"\nfirst\nsecond\n\"\"\"\n    println(b)\n    println(text)\n    println(lines)\n}\n",
+    "nodes": {
+      "byteLiteral": 1,
+      "mainDefinition": 1
+    },
+    "compile": true,
+    "stdout": "88\na \\ literal ${notInterpolation}\nfirst\nsecond\n\n"
+  },
+  {
+    "name": "function values and trailing lambdas",
+    "source": "func apply(x: Int64, f: (Int64) -> Int64): Int64 { f(x) }\nmain() {\n    let f: (Int64) -> Int64 = {x => x + 1}\n    println(apply(41, f))\n    println(apply(21) {x => x * 2})\n}\n",
+    "nodes": {
+      "trailingLambdaExpression": 1,
+      "lambdaExpression": 1
+    },
+    "compile": true,
+    "stdout": "42\n42\n"
+  },
+  {
+    "name": "generic constraints arrays and foreign blocks",
+    "source": "@C\nstruct Packet { var size: Int32 = 0 }\nforeign { func consume(data: CPointer<Int8>, size: IntNative): Int32 }\nfunc twice<T>(value: T): String where T <: ToString { value.toString() }\nmain() {\n    let values: VArray<Int64, $3> = [1, 2, 3]\n    println(values[0])\n    println(twice(21))\n}\n",
+    "nodes": {
+      "foreignBody": 1,
+      "genericConstraints": 1,
+      "structDefinition": 1
+    },
+    "compile": true,
+    "stdout": "1\n21\n"
+  },
+  {
+    "name": "contextual experimental names remain identifiers",
+    "source": "func perform(value: Int64): Int64 { value }\nfunc resume(): Int64 { 1 }\nfunc handle(): Int64 { 2 }\nmain() { println(perform(42) + resume() + handle()) }\n",
+    "nodes": {
+      "functionDefinition": 3
+    },
+    "compile": true,
+    "stdout": "45\n"
+  }
+]

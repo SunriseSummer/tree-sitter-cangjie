@@ -64,3 +64,12 @@ Do not accept bulk snapshot changes without reviewing unexpected `ERROR` or
 `MISSING` nodes. Repository tests are intentionally not copied into release
 artifacts: CI installs each built wheel or sdist into an isolated environment,
 then runs `tests/python` from the checkout against that installed distribution.
+
+## Version-specific compatibility tests
+
+`language-version.json` pins the official language SDK and chooses JSON fixtures
+under `tests/fixtures/versions`. Each fixture specifies expected semantic-node
+counts, so a recovery-free but incorrectly grouped parse still fails. Node and
+Python test LF/CRLF/EOF and incremental edit/undo; WASM consumes the same cases.
+`scripts/verify-compiler.py` compiles the marked fixtures with the pinned SDK and
+stdx library and verifies recorded executable output. See `docs/version-support.md`.

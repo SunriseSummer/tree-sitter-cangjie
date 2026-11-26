@@ -1,0 +1,187 @@
+==================
+Cangjie 1.2.1 organization package
+==================
+
+package sunrise::robot.navigation
+public func plan(): Int64 { 42 }
+
+---
+
+(translationUnit (packageDeclaration packageName: (organizationQualifiedName organization: (identifier) name: (scoped_identifier scope: (identifier) name: (identifier)))) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Int64)) (block (integerLiteral))))
+
+==================
+Cangjie 1.2.1 organization macro package
+==================
+
+macro package sunrise::macros
+import std.ast.*
+public macro Identity(t: Tokens): Tokens { t }
+
+---
+
+(translationUnit (macroPackageDeclaration packageName: (organizationQualifiedName organization: (identifier) name: (identifier))) (importList (packageFull packageName: (scoped_identifier scope: (identifier) name: (identifier)) (asterisk))) (macroDefinition (modifiers) name: (macroName) (identifier) (identifier) (identifier) (block (atomicVariable (varBindingPattern)))))
+
+==================
+Cangjie 1.2.1 organization import forms
+==================
+
+package client
+import sunrise::robot.Plan
+import sunrise::robot.*
+import sunrise::robot.Plan as PathPlan
+import sunrise::robot.{Plan, Graph as RouteGraph}
+import {sunrise::robot.Plan, other::maps.Grid}
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (importList packageName: (organizationQualifiedName organization: (identifier) name: (scoped_identifier scope: (identifier) name: (identifier)))) (importList (packageFull packageName: (organizationQualifiedName organization: (identifier) name: (identifier)) (asterisk))) (importList (packageAlias packageName: (organizationQualifiedName organization: (identifier) name: (scoped_identifier scope: (identifier) name: (identifier))) alias: (identifier))) (importList (subGroupOfPackage packageName: (organizationQualifiedName organization: (identifier) name: (identifier)) (packageGroup packageName: (identifier) (packageAlias packageName: (identifier) alias: (identifier))))) (importList (packageGroup packageName: (organizationQualifiedName organization: (identifier) name: (scoped_identifier scope: (identifier) name: (identifier))) packageName: (organizationQualifiedName organization: (identifier) name: (scoped_identifier scope: (identifier) name: (identifier))))))
+
+==================
+Cangjie 1.2.1 common declarations
+==================
+
+package shared
+public common func platformName(): String
+public common class Device {
+    common init()
+    common var ready: Bool
+    common func open(): Unit
+    common prop title: String
+}
+common struct Point { common var x: Int64; common init(x: Int64) }
+common interface Named { common func name(): String }
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (String))) (classDefinition (modifiers) name: (className) (classBody (init (modifiers) (parameterList)) (variableDeclaration (modifiers) name: (variableName (varBindingPattern)) type: (Bool)) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Unit))) (propertyDefinition (modifiers) name: (propertyName) type: (String)))) (structDefinition (modifiers) name: (structName) (structBody (variableDeclaration (modifiers) name: (variableName (varBindingPattern)) type: (Int64)) (init (modifiers) (parameterList (parameter paraName: (identifier) type: (Int64)))))) (interfaceDefinition (modifiers) name: (interfaceName) (interfaceBody (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (String))))))
+
+==================
+Cangjie 1.2.1 specific declarations
+==================
+
+package shared
+public specific func platformName(): String { "Linux" }
+public specific class Device {
+    specific init() {}
+    specific var ready: Bool = true
+    specific func open(): Unit {}
+    specific prop title: String { get() { "ready" } }
+}
+specific type NativeHandle = Int64
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (String)) (block (stringLiteral))) (classDefinition (modifiers) name: (className) (classBody (init (modifiers) (parameterList) (block)) (variableDeclaration (modifiers) name: (variableName (varBindingPattern)) type: (Bool) initilizer: (booleanLiteral)) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Unit)) (block)) (propertyDefinition (modifiers) name: (propertyName) type: (String) getter: (block (stringLiteral))))) (typeAlias (modifiers) name: (typeAliasName) type: (Int64)))
+
+==================
+Cangjie 1.2.1 common extensions and enums
+==================
+
+package shared
+common enum Choice<T> { | One(T) | Two | ...
+    common func value(): T
+}
+common extend Int64 { common func twice(): Int64 }
+specific extend Int32 { specific func twice(): Int32 { this * 2 } }
+
+---
+
+(translationUnit (packageDeclaration packageName: (identifier)) (enumDefinition (modifiers) name: (enumName) (typeParameters (identifier)) (enumBody (enumConstructor name: (identifier) payload: (enumPayload type: (userType (identifier)))) (enumConstructor name: (identifier)) (enumEllipsis) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (userType (identifier)))))) (extendDefinition (modifiers) (extendType) (extendBody (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Int64))))) (extendDefinition (modifiers) (extendType) (extendBody (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Int32)) (block (binaryExpression left: (thisSuperExpression) right: (integerLiteral)))))))
+
+==================
+Cangjie 1.2.1 feature declarations
+==================
+
+features { robot.navigation, robot.mapping, }
+package robot
+public func enabled(): Bool { true }
+
+---
+
+(translationUnit (featuresDirective (featureId (identifier) (identifier)) (featureId (identifier) (identifier))) (packageDeclaration packageName: (identifier)) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (Bool)) (block (booleanLiteral))))
+
+==================
+Cangjie 1.2.1 empty feature declarations
+==================
+
+features {}
+package robot
+func enabled() {}
+
+---
+
+(translationUnit (featuresDirective) (packageDeclaration packageName: (identifier)) (functionDefinition name: (funcName) (parameterList) (block)))
+
+==================
+Cangjie 1.2.1 effect perform and resume
+==================
+
+import stdx.effect.*
+class Read <: Command<Int64> {}
+main() {
+    let value = try { perform Read() } handle (r: Read) { resume with 42 }
+    println(value)
+}
+
+---
+
+(translationUnit (importList (packageFull packageName: (scoped_identifier scope: (identifier) name: (identifier)) (asterisk))) (classDefinition name: (className) (superOrInterface (identifier)) (typeParameters (identifier)) (classBody)) (mainDefinition (parameterList) (block (variableDeclaration name: (variableName (varBindingPattern)) initilizer: (tryExpression try_body: (block (performExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))) (handleClause (catchPattern (varBindingPattern) (userType (identifier))) body: (block (resumeExpression (integerLiteral)))))) (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (atomicVariable (varBindingPattern)))))))
+
+==================
+Cangjie 1.2.1 effect throwing and mixed handlers
+==================
+
+func request(): Int64 {
+    try { perform Read() }
+    handle (r: Read | Write) { resume throwing Exception("cancelled") }
+    catch (e: Exception) { 0 }
+    handle (_: Retry) { resume }
+    finally { cleanup() }
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList) (returnType (Int64)) (block (tryExpression try_body: (block (performExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))) (handleClause (catchPattern (varBindingPattern) (userType (identifier)) (userType (identifier))) body: (block (resumeExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (stringLiteral)))))) (catchPattern (varBindingPattern) (userType (identifier))) catch_body: (block (integerLiteral)) (handleClause (catchPattern (wildcardPattern) (userType (identifier))) body: (block (resumeExpression))) finally_body: (block (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix)))))))
+
+==================
+Cangjie 1.2.1 effect nested handlers
+==================
+
+func run() {
+    try {
+        try { perform Ask(1) } handle (_: Ask) { resume with perform Ask(2) }
+    } handle (request: Ask) { resume with 3 }
+}
+
+---
+
+(translationUnit (functionDefinition name: (funcName) (parameterList) (block (tryExpression try_body: (block (tryExpression try_body: (block (performExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral))))) (handleClause (catchPattern (wildcardPattern) (userType (identifier))) body: (block (resumeExpression (performExpression (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (callSuffix (integerLiteral))))))))) (handleClause (catchPattern (varBindingPattern) (userType (identifier))) body: (block (resumeExpression (integerLiteral))))))))
+
+==================
+Cangjie 1.2.1 interop annotations
+==================
+
+@!JavaMirror["java.lang.Object"]
+foreign class JObject {
+    public init()
+    public func toString(): String
+}
+@C
+foreign { func puts(value: CString): Int32 }
+
+---
+
+(translationUnit (macroExpression (macroName) (stringLiteral)) (foreignDeclaration (classDefinition name: (className) (classBody (init (modifiers) (parameterList)) (functionDefinition (modifiers) name: (funcName) (parameterList) (returnType (String)))))) (macroExpression (macroName)) (foreignDeclaration (foreignBody (functionDefinition name: (funcName) (parameterList (parameter paraName: (identifier) type: (userType (identifier)))) (returnType (Int32))))))
+
+==================
+Cangjie 1.2.1 env conditional annotations
+==================
+
+@When[env["ROBOT_BACKEND"] == "simulation"]
+func backend(): String { "simulation" }
+@When[os == "Linux" && arch == "x86_64"]
+func platform(): String { "linux" }
+
+---
+
+(translationUnit (macroExpression (macroName) (binaryExpression left: (postfixExpression operand: (atomicVariable (varBindingPattern)) suffix: (indexAccess (stringLiteral))) right: (stringLiteral))) (functionDefinition name: (funcName) (parameterList) (returnType (String)) (block (stringLiteral))) (macroExpression (macroName) (binaryExpression left: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (stringLiteral)) right: (binaryExpression left: (atomicVariable (varBindingPattern)) right: (stringLiteral)))) (functionDefinition name: (funcName) (parameterList) (returnType (String)) (block (stringLiteral))))

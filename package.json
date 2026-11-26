@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-cangjie-repository",
-  "version": "1.0.5-post1",
+  "version": "1.2.1",
   "private": true,
   "description": "Repository orchestration and integration tests for tree-sitter-cangjie",
   "license": "MulanPSL-2.0",
@@ -13,13 +13,14 @@
     "build:python": "python -m build bindings/python",
     "test": "npm run test:parser && npm run test:node && npm run build:wasm && npm run test:wasm",
     "test:parser": "npm --prefix parser test",
-    "test:node": "node --test --test-concurrency=1 tests/node/parser.test.js tests/node/corpus.test.js tests/node/queries/run_all.js",
+    "test:node": "node --test --test-concurrency=1 tests/node/parser.test.js tests/node/corpus.test.js tests/node/versions.test.js tests/node/queries/run_all.js",
     "test:wasm": "node scripts/test-wasm.mjs parser/tree-sitter-cangjie.wasm",
     "test:python": "python -m pytest tests/python",
     "snapshots:update": "node scripts/generate-ast-snapshots.cjs",
     "corpus:update": "node scripts/update-corpus.cjs",
     "verify:release": "node scripts/validate-release.mjs",
-    "verify": "npm test && npm run verify:release"
+    "verify": "npm test && npm run verify:release",
+    "test:compiler": "python scripts/verify-compiler.py"
   },
   "devDependencies": {
     "tree-sitter": "^0.25.1",

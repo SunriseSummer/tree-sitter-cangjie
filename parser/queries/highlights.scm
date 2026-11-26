@@ -253,3 +253,10 @@
     "{"
     "}"
 ] @punctuation.bracket
+
+; Cangjie 1.2 package organizations and experimental syntax.
+["common" "specific" "features" "perform" "resume" "with" "throwing" "handle"] @keyword
+(organizationQualifiedName organization: (identifier) @module)
+(featureId) @attribute
+"::" @punctuation.delimiter
+"@!" @punctuation.delimiter

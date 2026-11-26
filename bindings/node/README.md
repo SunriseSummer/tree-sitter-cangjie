@@ -22,3 +22,6 @@ queries, and `tree-sitter-cangjie.wasm`.
 
 Grammar development sources are maintained in the repository's `parser`
 project and are staged into this self-contained package before publication.
+
+This branch targets Cangjie 1.2.1. Install `tree-sitter-cangjie@1.2.1` (npm)
+or `tree-sitter-cangjie==1.2.1` (PyPI) for a reproducible language baseline.

@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.2.1] - 2026-11-26
+
+- Adapt to the official Cangjie 1.2.1 SDK: organization-qualified packages and
+  imports, common/specific declarations and extensions, open common enums,
+  features directives, and @! interop annotations.
+- Parse experimental effect handlers (perform, resume, handle), including
+  nested handlers and catch/finally clauses on separate lines.
+- Preserve existing 1.0.x fixture ASTs, and add shared version tests for Node,
+  Python and WASM, incremental edits, line endings, and compiler validation.
+- Publish the new language line independently from cangjie-1.0.5.
+
 ## [1.0.5-post1] - 2026-07-31
 
 - Refresh the Python package documentation published on PyPI.

@@ -71,9 +71,11 @@ const M = {
     ],
 
     inline: $ => [
+        $._packageName,
     ],
 
     conflicts: $ => [
+        [$.organizationQualifiedName, $.scoped_identifier],
         [$.modifiers],
         [$.modifiers, $.variableDeclaration],
         [$.callSuffix, $.unitLiteral],
@@ -98,6 +100,7 @@ const M = {
 
     rules: {
         translationUnit: $ => seq(
+            optional($.featuresDirective),
             optional(choice($.packageDeclaration, $.macroPackageDeclaration)),
             repeat($.importList),
             optional($._topObjects),
@@ -109,13 +112,26 @@ const M = {
 
         packageDeclaration: $ => seq(
             optional($.modifiers),
-            TOKENS.PACKAGE, field('packageName', $._name), optional(repeat1(terminator))
+            TOKENS.PACKAGE, field('packageName', $._packageName), optional(repeat1(terminator))
         ),
         macroPackageDeclaration: $ => seq(
             optional($.modifiers),
-            TOKENS.MACRO, TOKENS.PACKAGE, field('packageName', $._name), optional(repeat1(terminator))
+            TOKENS.MACRO, TOKENS.PACKAGE, field('packageName', $._packageName), optional(repeat1(terminator))
         ),
+        // Organization qualification is confined to package/import paths. Keep
+        // existing scoped_identifier trees unchanged for unqualified programs.
+        _packageName: $ => choice($._name, $.organizationQualifiedName),
+        organizationQualifiedName: $ => seq(
+            field('organization', $.identifier), '::', field('name', $._name)
+        ),
+        featuresDirective: $ => seq(
+            'features', '{', optional(seq(commaSep1($.featureId), optional(','))), '}',
+            repeat1(terminator)
+        ),
+        featureId: $ => seq($.identifier, repeat(seq('.', $.identifier))),
         modifiers: _ => repeat1(choice(
+            'common',
+            'specific',
             TOKENS.PUBLIC,
             TOKENS.PROTECTED,
             TOKENS.PRIVATE,
@@ -148,22 +164,22 @@ const M = {
             optional(repeat1(terminator))
         ),
         _importPackages: $ => choice(
-            prec.right(-3, field('packageName', $._name)),
+            prec.right(-3, field('packageName', $._packageName)),
             prec.right(-2, $.packageFull),
             prec.right(-1, $.packageAlias),
         ),
         packageAlias: $ => seq(
-            field('packageName', $._name),
+            field('packageName', $._packageName),
             TOKENS.AS,
             field('alias', choice($.identifier, $._reserved_identifier)),
         ),
-        packageFull: $ => seq(field('packageName', $._name), '.', $.asterisk),
+        packageFull: $ => seq(field('packageName', $._packageName), '.', $.asterisk),
         packageGroup: $ => seq(
             '{',
             seq($._importPackages, repeat(seq(',', $._importPackages))),
             '}',
         ),
-        subGroupOfPackage: $ => seq(field('packageName', $._name), '.', $.packageGroup),
+        subGroupOfPackage: $ => seq(field('packageName', $._packageName), '.', $.packageGroup),
         asterisk: _ => '*',
 
         //types
@@ -530,6 +546,7 @@ const M = {
         enumBody: $ => seq(
             '{', optional('|'),
             sep1($.enumConstructor, '|'),
+            optional(seq('|', $.enumEllipsis)),
             repeat(choice(
                 $.functionDefinition,
                 $.operatorFunctionDefinition,
@@ -542,6 +559,7 @@ const M = {
         // The previous hidden rule caused enumBody to expose a flat sequence of
         // identifiers, punctuation and types, making constructor signatures
         // impossible to recover reliably from the syntax tree.
+        enumEllipsis: _ => '...',
         enumConstructor: $ => seq(
             field('name', $.identifier),
             optional(field('payload', $.enumPayload))
@@ -560,6 +578,7 @@ const M = {
         ),
 
         extendDefinition: $ => seq(
+            optional($.modifiers),
             TOKENS.EXTEND,
             $.extendType,
             optional(seq(token('<:'), $._superInterfaces)),
@@ -662,6 +681,8 @@ const M = {
             $.matchExpression,
             $._loopExpression,
             $.tryExpression,
+            $.performExpression,
+            $.resumeExpression,
             $.quoteExpression,
             $.macroExpression,
             $._dollarIdentifier,
@@ -842,37 +863,41 @@ const M = {
 
         doWhileExpression: $ => seq(TOKENS.DO, field('body', $.block), TOKENS.WHILE, '(', $._expression, ')'),
 
+        // Experimental effect handlers share try/catch/finally syntax. The
+        // compiler enables them via --enable-eh; Tree-sitter accepts the union
+        // of normal and experimental source for editor use.
+        performExpression: $ => prec.right(seq('perform', $._expression)),
+        resumeExpression: $ => prec.right(seq(
+            'resume', optional(seq(choice('with', 'throwing'), $._expression))
+        )),
+        handleClause: $ => seq(
+            'handle', '(', $.catchPattern, ')', field('body', $.block)
+        ),
         tryExpression: $ => prec.right(choice(
             seq(TOKENS.TRY,
                 field('try_body', $.block),
-                TOKENS.FINALLY,
-                field('finally_body', $.block)
-            ),
-            seq(TOKENS.TRY,
-                field('try_body', $.block),
-                repeat1(seq(
-                    TOKENS.CATCH, '(', $.catchPattern, ')',
-                    field('catch_body', $.block))),
-                optional(seq(
-                    TOKENS.FINALLY,
-                    field('finally_body', $.block)))
+                choice(
+                    seq(repeat1($._tryHandler), optional($._finallyClause)),
+                    $._finallyClause
+                )
             ),
             seq(TOKENS.TRY, '(', $.resourceSpecifications, ')',
                 field('try_body', $.block),
-                repeat(seq(
-                    TOKENS.CATCH, '(', $.catchPattern, ')',
-                    field('catch_body', $.block))),
-                optional(seq(
-                    TOKENS.FINALLY,
-                    field('finally_body', $.block)))
+                repeat($._tryHandler),
+                optional($._finallyClause)
             )
         )),
+        _tryHandler: $ => choice($._catchClause, $.handleClause),
+        _catchClause: $ => seq(
+            TOKENS.CATCH, '(', $.catchPattern, ')', field('catch_body', $.block)
+        ),
+        _finallyClause: $ => seq(TOKENS.FINALLY, field('finally_body', $.block)),
 
         resourceSpecifications: $ => commaSep1($.resourceSpecification),
         resourceSpecification: $ => seq($.identifier, optional(seq(':', $._type)), '=', $._expression),  // $.classType
 
         macroExpression: $ => seq(
-            '@', $._macroName,
+            choice('@', '@!'), $._macroName,
             optional(seq('[', optional(commaSep1($._macroAttrArgument)), ']')),
             optional(seq('(', optional(seq(repeat(seq($._expression, ',')), $._expression)), ')')),
         ),

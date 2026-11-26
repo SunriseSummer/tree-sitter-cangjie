@@ -72,6 +72,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -81,6 +85,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -407,6 +415,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -416,6 +428,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -545,6 +561,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -554,6 +574,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -713,6 +737,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -722,6 +750,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -953,6 +985,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -962,6 +998,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -1093,6 +1133,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -1102,6 +1146,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -1228,6 +1276,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -1237,6 +1289,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -1621,6 +1677,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -1630,6 +1690,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -1689,6 +1753,10 @@
       "types": [
         {
           "type": "enumConstructor",
+          "named": true
+        },
+        {
+          "type": "enumEllipsis",
           "named": true
         },
         {
@@ -1777,6 +1845,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "enumEllipsis",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "enumPattern",
@@ -1969,6 +2042,10 @@
           "named": true
         },
         {
+          "type": "modifiers",
+          "named": true
+        },
+        {
           "type": "superOrInterface",
           "named": true
         },
@@ -2001,6 +2078,36 @@
         },
         {
           "type": "typeParameters",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "featureId",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "featuresDirective",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "featureId",
           "named": true
         }
       ]
@@ -2121,6 +2228,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -2130,6 +2241,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -2434,6 +2549,32 @@
     }
   },
   {
+    "type": "handleClause",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "catchPattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "ifExpression",
     "named": true,
     "fields": {
@@ -2556,6 +2697,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -2565,6 +2710,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -2647,6 +2796,10 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "organizationQualifiedName",
             "named": true
           },
           {
@@ -2756,6 +2909,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -2765,6 +2922,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -2892,6 +3053,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -2901,6 +3066,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -3046,6 +3215,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -3055,6 +3228,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -3250,6 +3427,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -3259,6 +3440,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -3393,6 +3578,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -3402,6 +3591,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -3677,6 +3870,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -3686,6 +3883,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -3812,6 +4013,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -3821,6 +4026,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -3884,6 +4093,10 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "organizationQualifiedName",
             "named": true
           },
           {
@@ -4024,6 +4237,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -4033,6 +4250,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -4183,6 +4404,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -4192,6 +4417,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -4326,6 +4555,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -4335,6 +4568,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -4493,6 +4730,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -4502,6 +4743,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -4708,6 +4953,36 @@
     }
   },
   {
+    "type": "organizationQualifiedName",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      },
+      "organization": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "packageAlias",
     "named": true,
     "fields": {
@@ -4730,6 +5005,10 @@
             "named": true
           },
           {
+            "type": "organizationQualifiedName",
+            "named": true
+          },
+          {
             "type": "scoped_identifier",
             "named": true
           }
@@ -4747,6 +5026,10 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "organizationQualifiedName",
             "named": true
           },
           {
@@ -4780,6 +5063,10 @@
             "named": true
           },
           {
+            "type": "organizationQualifiedName",
+            "named": true
+          },
+          {
             "type": "scoped_identifier",
             "named": true
           }
@@ -4807,6 +5094,10 @@
         "types": [
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "organizationQualifiedName",
             "named": true
           },
           {
@@ -5049,6 +5340,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -5058,6 +5353,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -5180,6 +5479,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -5189,6 +5492,149 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "performExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpression",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "performExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -5323,6 +5769,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -5332,6 +5782,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -5616,6 +6070,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -5629,6 +6087,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -6056,6 +6518,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -6065,6 +6531,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -6194,6 +6664,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -6203,6 +6677,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -6332,6 +6810,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -6341,6 +6823,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -6563,6 +7049,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -6580,6 +7070,10 @@
         },
         {
           "type": "rangeType",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -6647,6 +7141,145 @@
       "types": [
         {
           "type": "resourceSpecification",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "resumeExpression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "arrayLiteral",
+          "named": true
+        },
+        {
+          "type": "atomicVariable",
+          "named": true
+        },
+        {
+          "type": "binaryExpression",
+          "named": true
+        },
+        {
+          "type": "booleanLiteral",
+          "named": true
+        },
+        {
+          "type": "byteLiteral",
+          "named": true
+        },
+        {
+          "type": "doWhileExpression",
+          "named": true
+        },
+        {
+          "type": "floatLiteral",
+          "named": true
+        },
+        {
+          "type": "forInExpression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "ifExpression",
+          "named": true
+        },
+        {
+          "type": "integerLiteral",
+          "named": true
+        },
+        {
+          "type": "jumpExpression",
+          "named": true
+        },
+        {
+          "type": "lambdaExpression",
+          "named": true
+        },
+        {
+          "type": "macroExpression",
+          "named": true
+        },
+        {
+          "type": "matchExpression",
+          "named": true
+        },
+        {
+          "type": "parenthesizedExpression",
+          "named": true
+        },
+        {
+          "type": "performExpression",
+          "named": true
+        },
+        {
+          "type": "postfixExpression",
+          "named": true
+        },
+        {
+          "type": "quoteExpression",
+          "named": true
+        },
+        {
+          "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
+          "named": true
+        },
+        {
+          "type": "runeLiteral",
+          "named": true
+        },
+        {
+          "type": "spawnExpression",
+          "named": true
+        },
+        {
+          "type": "stringLiteral",
+          "named": true
+        },
+        {
+          "type": "synchronizedExpression",
+          "named": true
+        },
+        {
+          "type": "thisSuperExpression",
+          "named": true
+        },
+        {
+          "type": "tryExpression",
+          "named": true
+        },
+        {
+          "type": "tupleExpression",
+          "named": true
+        },
+        {
+          "type": "unaryExpression",
+          "named": true
+        },
+        {
+          "type": "unitLiteral",
+          "named": true
+        },
+        {
+          "type": "unsafeExpression",
+          "named": true
+        },
+        {
+          "type": "whileExpression",
           "named": true
         }
       ]
@@ -6866,6 +7499,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -6875,6 +7512,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -7060,6 +7701,10 @@
             "named": true
           },
           {
+            "type": "organizationQualifiedName",
+            "named": true
+          },
+          {
             "type": "scoped_identifier",
             "named": true
           }
@@ -7173,6 +7818,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -7182,6 +7831,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -7321,6 +7974,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -7330,6 +7987,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -7402,6 +8063,10 @@
         },
         {
           "type": "extendDefinition",
+          "named": true
+        },
+        {
+          "type": "featuresDirective",
           "named": true
         },
         {
@@ -7499,6 +8164,10 @@
           "named": true
         },
         {
+          "type": "handleClause",
+          "named": true
+        },
+        {
           "type": "resourceSpecifications",
           "named": true
         }
@@ -7578,6 +8247,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -7587,6 +8260,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -8256,6 +8933,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -8265,6 +8946,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -8491,6 +9176,10 @@
             "named": true
           },
           {
+            "type": "performExpression",
+            "named": true
+          },
+          {
             "type": "postfixExpression",
             "named": true
           },
@@ -8500,6 +9189,10 @@
           },
           {
             "type": "rangeExpression",
+            "named": true
+          },
+          {
+            "type": "resumeExpression",
             "named": true
           },
           {
@@ -8788,6 +9481,10 @@
           "named": true
         },
         {
+          "type": "performExpression",
+          "named": true
+        },
+        {
           "type": "postfixExpression",
           "named": true
         },
@@ -8797,6 +9494,10 @@
         },
         {
           "type": "rangeExpression",
+          "named": true
+        },
+        {
+          "type": "resumeExpression",
           "named": true
         },
         {
@@ -9008,6 +9709,10 @@
     "named": false
   },
   {
+    "type": "::",
+    "named": false
+  },
+  {
     "type": ";",
     "named": false
   },
@@ -9073,6 +9778,10 @@
   },
   {
     "type": "@",
+    "named": false
+  },
+  {
+    "type": "@!",
     "named": false
   },
   {
@@ -9293,6 +10002,10 @@
     "named": true
   },
   {
+    "type": "common",
+    "named": false
+  },
+  {
     "type": "const",
     "named": false
   },
@@ -9321,6 +10034,10 @@
     "named": false
   },
   {
+    "type": "features",
+    "named": false
+  },
+  {
     "type": "finally",
     "named": false
   },
@@ -9346,6 +10063,10 @@
   },
   {
     "type": "get",
+    "named": false
+  },
+  {
+    "type": "handle",
     "named": false
   },
   {
@@ -9442,6 +10163,10 @@
     "named": false
   },
   {
+    "type": "perform",
+    "named": false
+  },
+  {
     "type": "private",
     "named": false
   },
@@ -9470,6 +10195,10 @@
     "named": false
   },
   {
+    "type": "resume",
+    "named": false
+  },
+  {
     "type": "return",
     "named": false
   },
@@ -9487,6 +10216,10 @@
   },
   {
     "type": "spawn",
+    "named": false
+  },
+  {
+    "type": "specific",
     "named": false
   },
   {
@@ -9518,6 +10251,10 @@
     "named": false
   },
   {
+    "type": "throwing",
+    "named": false
+  },
+  {
     "type": "try",
     "named": false
   },
@@ -9543,6 +10280,10 @@
   },
   {
     "type": "while",
+    "named": false
+  },
+  {
+    "type": "with",
     "named": false
   },
   {
